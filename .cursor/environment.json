@@ -1,0 +1,22 @@
+{
+  "name": "collaborative-docs",
+  "install": "npm run setup:agent",
+  "terminals": [
+    {
+      "name": "convex",
+      "command": "npm run dev:convex",
+      "description": "Anonymous local Convex. Syncs functions; refreshes NEXT_PUBLIC_CONVEX_URL in .env.local."
+    },
+    {
+      "name": "next",
+      "command": "npm run dev:web:ready",
+      "description": "Next.js on :3000 after Convex is listening on :3210."
+    }
+  ],
+  "ports": [
+    {
+      "name": "web",
+      "port": 3000
+    }
+  ]
+}

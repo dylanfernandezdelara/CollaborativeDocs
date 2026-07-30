@@ -3,3 +3,38 @@
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
 <!-- END:nextjs-agent-rules -->
+
+## Cursor Cloud specific instructions
+
+Configured via `.cursor/environment.json`. Commands live in `package.json` — prefer `npm run …` over inlining CLI strings.
+
+### Boot sequence
+
+1. **Install** (automatic): `npm run setup:agent` — `npm ci` + anonymous Convex once (writes `.env.local`).
+2. **Terminals** (automatic):
+   - `npm run dev:convex` — keeps the local backend running
+   - `npm run dev:web:ready` — waits for Convex on `:3210`, then Next on `:3000`
+
+### Development rules
+
+- Use anonymous / local Convex for Cloud Agents (`CONVEX_AGENT_MODE=anonymous`). Do **not** log into the human owner's personal Convex deploy.
+- Never run `npx convex deploy` unless explicitly asked to deploy production.
+- Do not commit `.env.local` or anything under `.convex/`.
+- UI design tokens live in `DESIGN.md` — follow them for product UI work.
+- Read Next.js docs under `node_modules/next/dist/docs/` before changing App Router / Next APIs.
+
+### Useful commands
+
+```bash
+npm run lint
+npm run build
+npm run convex:once          # refresh functions / .env.local once
+npm run dev:convex           # long-running local Convex
+npm run dev:web              # Next only (assumes Convex already up)
+npm run dev:web:ready        # wait for Convex, then Next
+```
+
+### Product vs repo agents
+
+- **Repo Cloud Agents** (this environment): develop CollaborativeDocs itself.
+- **Doc invite agents** (product feature): Share dialog → mint token → `curl …/api/join/{token} | sh` configures MCP for a Cursor CLI agent inside a document. That path needs a publicly reachable app origin; local Cloud Agent VMs are for codebase work, not dogfooding invites unless you tunnel/deploy.
