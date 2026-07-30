@@ -95,11 +95,11 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
             <h3 className="text-[13px] font-medium text-[#292929]">
               Invite an agent
             </h3>
-            <div className="mt-2 flex gap-2">
+            <div className="mt-2 flex w-full min-w-0 gap-2">
               <Input
                 value={agentName}
                 onChange={(e) => setAgentName(e.target.value)}
-                className="h-8 text-[13px]"
+                className="h-8 min-w-0 flex-1 text-[13px]"
               />
               <Button
                 onClick={() => void handleMint()}
