@@ -1,8 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useCallback, useState, useSyncExternalStore } from "react";
+import { useCallback, useSyncExternalStore } from "react";
 
 const STORAGE_KEY = "collabdocs-name";
 const listeners = new Set<() => void>();
@@ -16,12 +14,40 @@ function notifySubscribers() {
   listeners.forEach((listener) => listener());
 }
 
-function getNameSnapshot() {
+function getStoredName(): string | null {
+  if (typeof localStorage === "undefined") return null;
   return localStorage.getItem(STORAGE_KEY);
 }
 
-function getNameServerSnapshot() {
+function getNameSnapshot(): string | null {
+  return getStoredName();
+}
+
+function getNameServerSnapshot(): string | null {
   return null;
+}
+
+function shortSuffix(seed: string): string {
+  return seed.replace(/-/g, "").slice(0, 4);
+}
+
+/** Prefer an explicit name, then GitHub profile name, then a stable guest label. */
+export function resolveDisplayName(options: {
+  storedName: string | null;
+  githubName?: string | null;
+  ownerKey: string | null;
+}): string {
+  const stored = options.storedName?.trim();
+  if (stored) return stored;
+
+  const github = options.githubName?.trim();
+  if (github) return github;
+
+  if (options.ownerKey) {
+    return `Guest ${shortSuffix(options.ownerKey)}`;
+  }
+
+  return "Guest";
 }
 
 export function useDisplayName() {
@@ -43,45 +69,10 @@ export function useDisplayName() {
     notifySubscribers();
   }, []);
 
-  return { name, loaded, saveName };
-}
+  const clearName = useCallback(() => {
+    localStorage.removeItem(STORAGE_KEY);
+    notifySubscribers();
+  }, []);
 
-export function NamePrompt({ onDone }: { onDone: (name: string) => void }) {
-  const [value, setValue] = useState("");
-
-  return (
-    <div className="flex min-h-screen items-center justify-center bg-[#FAFAFA] px-4">
-      <div className="w-full max-w-sm rounded-2xl border border-[rgba(0,0,0,0.10)] bg-white p-6">
-        <h2 className="text-[14px] font-medium text-[#292929]">
-          What should we call you?
-        </h2>
-        <p className="mt-1 text-[13px] text-[#5D5D5D]">
-          Your name appears on comments and presence.
-        </p>
-        <form
-          className="mt-4 flex flex-col gap-3"
-          onSubmit={(e) => {
-            e.preventDefault();
-            const trimmed = value.trim();
-            if (trimmed) onDone(trimmed);
-          }}
-        >
-          <Input
-            autoFocus
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            placeholder="Your name"
-            className="h-9 text-[14px]"
-          />
-          <Button
-            type="submit"
-            disabled={!value.trim()}
-            className="rounded-full text-[13px]"
-          >
-            Continue
-          </Button>
-        </form>
-      </div>
-    </div>
-  );
+  return { name, loaded, saveName, clearName };
 }

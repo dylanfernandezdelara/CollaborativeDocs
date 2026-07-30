@@ -13,7 +13,8 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { editorExtensions } from "@/lib/editorExtensions";
-import { NamePrompt, useDisplayName } from "@/lib/useDisplayName";
+import { useOwnerKey } from "@/lib/ownerKey";
+import { resolveDisplayName, useDisplayName } from "@/lib/useDisplayName";
 import { useTiptapSync } from "@convex-dev/prosemirror-sync/tiptap";
 import usePresence from "@convex-dev/presence/react";
 import {
@@ -134,10 +135,22 @@ export default function DocPage({
   const { docId: docIdParam } = use(params);
   const docId = docIdParam as Id<"documents">;
 
-  const { name, loaded, saveName } = useDisplayName();
+  const { name, loaded: nameLoaded } = useDisplayName();
+  const { ownerKey, loaded: ownerLoaded } = useOwnerKey();
+  const user = useQuery(api.users.current);
+  const displayName = resolveDisplayName({
+    storedName: name,
+    githubName: user?.name ?? null,
+    ownerKey,
+  });
   const doc = useQuery(api.documents.get, { id: docId });
   const sync = useTiptapSync(api.prosemirror, docId);
-  const presenceState = usePresence(api.presence, docId, name ?? "", 10_000);
+  const presenceState = usePresence(
+    api.presence,
+    docId,
+    ownerLoaded ? displayName : "",
+    10_000,
+  );
   const agents = useQuery(api.agents.listForDoc, { docId });
   const intents = useQuery(api.intents.listActive, { docId });
   const comments = useQuery(api.comments.list, { docId });
@@ -176,11 +189,7 @@ export default function DocPage({
     setCommentsOpen(true);
   }
 
-  if (!loaded) return null;
-
-  if (!name) {
-    return <NamePrompt onDone={saveName} />;
-  }
+  if (!nameLoaded || !ownerLoaded) return null;
 
   if (doc === undefined) return null;
 
@@ -269,7 +278,7 @@ export default function DocPage({
 
       <CommentsPanel
         docId={docId}
-        displayName={name}
+        displayName={displayName}
         comments={comments}
         onlineAgents={onlineAgents}
         open={commentsOpen}

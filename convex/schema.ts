@@ -1,11 +1,15 @@
+import { authTables } from "@convex-dev/auth/server";
 import { defineSchema, defineTable } from "convex/server";
 import { v } from "convex/values";
 
 export default defineSchema({
+  ...authTables,
   documents: defineTable({
     title: v.string(),
     createdAt: v.number(),
-  }),
+    /** `local:<cookie>` for anonymous owners, `user:<id>` after GitHub sign-in. */
+    ownerId: v.string(),
+  }).index("by_owner", ["ownerId"]),
   agents: defineTable({
     docId: v.id("documents"),
     name: v.string(),

@@ -95,10 +95,9 @@ export async function resolveDocId(
     return pending.docId;
   }
 
-  const documents = await client.query(api.documents.list, {});
-  const matches = documents.filter((doc) => doc.title === title);
-  if (matches.length === 1) {
-    return matches[0]!._id;
+  const agent = await client.query(api.agents.forToken, { token });
+  if (agent) {
+    return agent.docId;
   }
 
   throw new Error(`Unable to resolve document id for title "${title}"`);
