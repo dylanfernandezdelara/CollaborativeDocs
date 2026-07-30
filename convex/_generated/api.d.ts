@@ -8,13 +8,37 @@
  * @module
  */
 
+import type * as agentDoc from "../agentDoc.js";
+import type * as agents from "../agents.js";
+import type * as comments from "../comments.js";
+import type * as documents from "../documents.js";
+import type * as edits from "../edits.js";
+import type * as intents from "../intents.js";
+import type * as lib_agentAuth from "../lib/agentAuth.js";
+import type * as lib_markdown from "../lib/markdown.js";
+import type * as notifications from "../notifications.js";
+import type * as presence from "../presence.js";
+import type * as prosemirror from "../prosemirror.js";
+
 import type {
   ApiFromModules,
   FilterApi,
   FunctionReference,
 } from "convex/server";
 
-declare const fullApi: ApiFromModules<{}>;
+declare const fullApi: ApiFromModules<{
+  agentDoc: typeof agentDoc;
+  agents: typeof agents;
+  comments: typeof comments;
+  documents: typeof documents;
+  edits: typeof edits;
+  intents: typeof intents;
+  "lib/agentAuth": typeof lib_agentAuth;
+  "lib/markdown": typeof lib_markdown;
+  notifications: typeof notifications;
+  presence: typeof presence;
+  prosemirror: typeof prosemirror;
+}>;
 
 /**
  * A utility for referencing Convex functions in your app's public API.
