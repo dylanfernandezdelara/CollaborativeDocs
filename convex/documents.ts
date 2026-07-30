@@ -26,7 +26,7 @@ const documentValidator = v.object({
   _creationTime: v.number(),
   title: v.string(),
   createdAt: v.number(),
-  ownerId: v.string(),
+  ownerId: v.optional(v.string()),
 });
 
 export const create = mutation({

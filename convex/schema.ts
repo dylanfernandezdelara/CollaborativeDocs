@@ -8,7 +8,7 @@ export default defineSchema({
     title: v.string(),
     createdAt: v.number(),
     /** `local:<cookie>` for anonymous owners, `user:<id>` after GitHub sign-in. */
-    ownerId: v.string(),
+    ownerId: v.optional(v.string()),
   }).index("by_owner", ["ownerId"]),
   agents: defineTable({
     docId: v.id("documents"),
