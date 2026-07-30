@@ -4,6 +4,8 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
+    "dev:convex": "CONVEX_AGENT_MODE=anonymous convex dev",
+    "setup:agent": "npm ci && CONVEX_AGENT_MODE=anonymous npx convex dev --once",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
