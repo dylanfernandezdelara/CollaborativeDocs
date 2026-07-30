@@ -115,24 +115,29 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
               <div className="mt-3 space-y-3">
                 <div>
                   <p className="mb-1 text-[12px] text-[#9E9E9E]">
-                    One-liner install
+                    One-liner install — click to copy
                   </p>
-                  <div className="flex items-start gap-2 rounded-lg border border-[rgba(0,0,0,0.10)] bg-[#FAFAFA] p-2">
-                    <code className="flex-1 overflow-x-auto text-[12px] text-[#5D5D5D]">
+                  <button
+                    type="button"
+                    onClick={() => void copyText(curlCommand, "curl")}
+                    className="group flex w-full cursor-pointer items-center gap-3 rounded-lg border border-[rgba(0,0,0,0.10)] bg-[#FAFAFA] p-3 text-left transition-colors hover:border-[rgba(0,0,0,0.20)] hover:bg-[#F2F2F1]"
+                  >
+                    <code className="min-w-0 flex-1 break-all text-[12px] leading-relaxed text-[#5D5D5D]">
                       {curlCommand}
                     </code>
-                    <Button
-                      variant="ghost"
-                      size="icon-sm"
-                      onClick={() => void copyText(curlCommand, "curl")}
-                    >
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-[rgba(0,0,0,0.10)] bg-white text-[#5D5D5D] group-hover:text-[#292929]">
                       {copied === "curl" ? (
-                        <Check className="size-3.5" />
+                        <Check className="size-4" />
                       ) : (
-                        <Copy className="size-3.5" />
+                        <Copy className="size-4" />
                       )}
-                    </Button>
-                  </div>
+                    </span>
+                  </button>
+                  {copied === "curl" && (
+                    <p className="mt-1 text-[12px] text-[#9E9E9E]">
+                      Copied to clipboard
+                    </p>
+                  )}
                 </div>
 
                 <div>
@@ -149,22 +154,22 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                     Manual setup
                   </button>
                   {manualOpen && (
-                    <div className="mt-2 flex items-start gap-2 rounded-lg border border-[rgba(0,0,0,0.10)] bg-[#FAFAFA] p-2">
-                      <pre className="flex-1 overflow-x-auto text-[12px] text-[#5D5D5D]">
+                    <button
+                      type="button"
+                      onClick={() => void copyText(mcpJson, "json")}
+                      className="group mt-2 flex w-full cursor-pointer items-start gap-3 rounded-lg border border-[rgba(0,0,0,0.10)] bg-[#FAFAFA] p-3 text-left transition-colors hover:border-[rgba(0,0,0,0.20)] hover:bg-[#F2F2F1]"
+                    >
+                      <pre className="min-w-0 flex-1 whitespace-pre-wrap break-all text-[12px] leading-relaxed text-[#5D5D5D]">
                         {mcpJson}
                       </pre>
-                      <Button
-                        variant="ghost"
-                        size="icon-sm"
-                        onClick={() => void copyText(mcpJson, "json")}
-                      >
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-[rgba(0,0,0,0.10)] bg-white text-[#5D5D5D] group-hover:text-[#292929]">
                         {copied === "json" ? (
-                          <Check className="size-3.5" />
+                          <Check className="size-4" />
                         ) : (
-                          <Copy className="size-3.5" />
+                          <Copy className="size-4" />
                         )}
-                      </Button>
-                    </div>
+                      </span>
+                    </button>
                   )}
                 </div>
               </div>
