@@ -4,8 +4,11 @@
   "private": true,
   "scripts": {
     "dev": "next dev",
-    "dev:convex": "CONVEX_AGENT_MODE=anonymous convex dev",
-    "setup:agent": "npm ci && CONVEX_AGENT_MODE=anonymous npx convex dev --once",
+    "dev:web": "next dev --hostname 0.0.0.0 --port 3000",
+    "dev:web:ready": "bash -c 'until curl -sf http://127.0.0.1:3210 >/dev/null; do sleep 1; done; exec npm run dev:web'",
+    "dev:convex": "CONVEX_AGENT_MODE=anonymous npx convex dev",
+    "convex:once": "CONVEX_AGENT_MODE=anonymous npx convex dev --once",
+    "setup:agent": "npm ci && npm run convex:once",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"

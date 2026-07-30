@@ -6,18 +6,18 @@ This version has breaking changes — APIs, conventions, and file structure may 
 
 ## Cursor Cloud specific instructions
 
-This repo is configured for Cursor Cloud Agents via `.cursor/environment.json`.
+Configured via `.cursor/environment.json`. Commands live in `package.json` — prefer `npm run …` over inlining CLI strings.
 
 ### Boot sequence
 
-1. **Install** (automatic): `npm ci`, then `CONVEX_AGENT_MODE=anonymous npx convex dev --once` — provisions an isolated local Convex backend and writes `.env.local` (`NEXT_PUBLIC_CONVEX_URL`, etc.).
+1. **Install** (automatic): `npm run setup:agent` — `npm ci` + anonymous Convex once (writes `.env.local`).
 2. **Terminals** (automatic):
-   - `convex` — keeps the local backend running and syncs functions
-   - `next` — app on `http://localhost:3000`
+   - `npm run dev:convex` — keeps the local backend running
+   - `npm run dev:web:ready` — waits for Convex on `:3210`, then Next on `:3000`
 
 ### Development rules
 
-- Use `CONVEX_AGENT_MODE=anonymous` / local Convex for Cloud Agents. Do **not** log into the human owner's personal Convex deploy.
+- Use anonymous / local Convex for Cloud Agents (`CONVEX_AGENT_MODE=anonymous`). Do **not** log into the human owner's personal Convex deploy.
 - Never run `npx convex deploy` unless explicitly asked to deploy production.
 - Do not commit `.env.local` or anything under `.convex/`.
 - UI design tokens live in `DESIGN.md` — follow them for product UI work.
@@ -28,8 +28,10 @@ This repo is configured for Cursor Cloud Agents via `.cursor/environment.json`.
 ```bash
 npm run lint
 npm run build
-CONVEX_AGENT_MODE=anonymous npx convex dev --once   # refresh functions once
-npm run dev -- --hostname 0.0.0.0 --port 3000       # app only
+npm run convex:once          # refresh functions / .env.local once
+npm run dev:convex           # long-running local Convex
+npm run dev:web              # Next only (assumes Convex already up)
+npm run dev:web:ready        # wait for Convex, then Next
 ```
 
 ### Product vs repo agents

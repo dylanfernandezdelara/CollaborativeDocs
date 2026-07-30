@@ -1,16 +1,16 @@
 {
   "name": "collaborative-docs",
-  "install": "npm ci && CONVEX_AGENT_MODE=anonymous npx convex dev --once",
+  "install": "npm run setup:agent",
   "terminals": [
     {
       "name": "convex",
-      "command": "CONVEX_AGENT_MODE=anonymous npx convex dev",
-      "description": "Local anonymous Convex backend. Syncs schema/functions and keeps NEXT_PUBLIC_CONVEX_URL current in .env.local."
+      "command": "npm run dev:convex",
+      "description": "Anonymous local Convex. Syncs functions; refreshes NEXT_PUBLIC_CONVEX_URL in .env.local."
     },
     {
       "name": "next",
-      "command": "npm run dev -- --hostname 0.0.0.0 --port 3000",
-      "description": "Next.js app on port 3000. Depends on Convex terminal / .env.local from install."
+      "command": "npm run dev:web:ready",
+      "description": "Next.js on :3000 after Convex is listening on :3210."
     }
   ],
   "ports": [
