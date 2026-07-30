@@ -11,6 +11,11 @@ import { Input } from "@/components/ui/input";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { useMutation, useQuery } from "convex/react";
+import {
+  agentInviteSlug,
+  agentMcpServerId,
+  buildJoinCurlCommand,
+} from "@/lib/agentInvite";
 import { Check, ChevronDown, ChevronRight, Copy } from "lucide-react";
 import { useState } from "react";
 
@@ -50,15 +55,18 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
     onOpenChange(nextOpen);
   }
 
+  const inviteSlug = minted ? agentInviteSlug(minted.name, minted.token) : "";
+  const mcpServerId = inviteSlug ? agentMcpServerId(inviteSlug) : "";
+
   const curlCommand = minted
-    ? `curl -fsSL ${origin}/api/join/${minted.token} | sh`
+    ? buildJoinCurlCommand(origin, minted.token, minted.name)
     : "";
 
   const mcpJson = minted
     ? JSON.stringify(
         {
           mcpServers: {
-            collabdocs: {
+            [mcpServerId]: {
               url: `${origin}/api/mcp/${minted.token}`,
             },
           },
@@ -115,7 +123,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
               <div className="mt-3 space-y-3">
                 <div>
                   <p className="mb-1 text-[12px] text-[#9E9E9E]">
-                    One-liner install — click to copy
+                    Start {minted.name} — paste in a terminal
                   </p>
                   <button
                     type="button"

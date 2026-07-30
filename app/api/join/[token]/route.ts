@@ -1,3 +1,9 @@
+import {
+  agentInviteSlug,
+  agentMcpServerId,
+  buildAgentWorkspaceScript,
+} from "@/lib/agentInvite";
+
 function getOrigin(request: Request): string {
   const forwardedHost = request.headers.get("x-forwarded-host");
   const forwardedProto = request.headers.get("x-forwarded-proto");
@@ -18,29 +24,22 @@ export async function GET(
   const { token } = await context.params;
   const origin = getOrigin(request);
   const mcpUrl = `${origin}/api/mcp/${token}`;
+  const name = new URL(request.url).searchParams.get("name")?.trim() || "agent";
+  const slug = agentInviteSlug(name, token);
+  const mcpId = agentMcpServerId(slug);
 
-  const script = `#!/bin/sh
-set -eu
-
-ORIGIN="${origin}"
-TOKEN="${token}"
-MCP_URL="${mcpUrl}"
-
-mkdir -p .cursor
-
-if [ -f .cursor/mcp.json ]; then
-  node -e 'const fs=require("fs");const p=".cursor/mcp.json";const cfg=JSON.parse(fs.readFileSync(p,"utf8"));cfg.mcpServers=cfg.mcpServers||{};cfg.mcpServers.collabdocs={url:process.env.MCP_URL};fs.writeFileSync(p,JSON.stringify(cfg,null,2)+"\\n");' MCP_URL="$MCP_URL"
-else
-  printf '%s\\n' "{\\"mcpServers\\":{\\"collabdocs\\":{\\"url\\":\\"$MCP_URL\\"}}}" > .cursor/mcp.json
-fi
-
-echo 'Added CollabDocs MCP server to .cursor/mcp.json'
-echo 'Start your agent (e.g. \`cursor-agent\`) in this directory to connect.'
-`;
+  const script = buildAgentWorkspaceScript({
+    token,
+    name,
+    mcpUrl,
+  });
 
   return new Response(script, {
     headers: {
       "Content-Type": "text/plain; charset=utf-8",
+      "X-CollabDocs-Agent-Name": name,
+      "X-CollabDocs-Agent-Slug": slug,
+      "X-CollabDocs-Mcp-Id": mcpId,
     },
   });
 }
