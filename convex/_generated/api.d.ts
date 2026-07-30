@@ -10,15 +10,19 @@
 
 import type * as agentDoc from "../agentDoc.js";
 import type * as agents from "../agents.js";
+import type * as auth from "../auth.js";
 import type * as comments from "../comments.js";
 import type * as documents from "../documents.js";
 import type * as edits from "../edits.js";
+import type * as http from "../http.js";
 import type * as intents from "../intents.js";
 import type * as lib_agentAuth from "../lib/agentAuth.js";
 import type * as lib_markdown from "../lib/markdown.js";
+import type * as lib_owner from "../lib/owner.js";
 import type * as notifications from "../notifications.js";
 import type * as presence from "../presence.js";
 import type * as prosemirror from "../prosemirror.js";
+import type * as users from "../users.js";
 
 import type {
   ApiFromModules,
@@ -29,15 +33,19 @@ import type {
 declare const fullApi: ApiFromModules<{
   agentDoc: typeof agentDoc;
   agents: typeof agents;
+  auth: typeof auth;
   comments: typeof comments;
   documents: typeof documents;
   edits: typeof edits;
+  http: typeof http;
   intents: typeof intents;
   "lib/agentAuth": typeof lib_agentAuth;
   "lib/markdown": typeof lib_markdown;
+  "lib/owner": typeof lib_owner;
   notifications: typeof notifications;
   presence: typeof presence;
   prosemirror: typeof prosemirror;
+  users: typeof users;
 }>;
 
 /**

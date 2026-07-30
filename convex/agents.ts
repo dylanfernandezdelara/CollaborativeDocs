@@ -93,6 +93,34 @@ export const listForDoc = query({
   },
 });
 
+export const forToken = query({
+  args: { token: v.string() },
+  returns: v.union(
+    v.object({
+      _id: v.id("agents"),
+      docId: v.id("documents"),
+      name: v.string(),
+    }),
+    v.null(),
+  ),
+  handler: async (ctx, args) => {
+    const agent = await ctx.db
+      .query("agents")
+      .withIndex("by_token", (q) => q.eq("token", args.token))
+      .unique();
+
+    if (!agent || agent.revoked) {
+      return null;
+    }
+
+    return {
+      _id: agent._id,
+      docId: agent.docId,
+      name: agent.name,
+    };
+  },
+});
+
 export const byToken = internalQuery({
   args: { token: v.string() },
   returns: v.union(

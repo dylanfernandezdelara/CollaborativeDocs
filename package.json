@@ -14,7 +14,9 @@
     "lint": "eslint"
   },
   "dependencies": {
+    "@auth/core": "^0.41.1",
     "@base-ui/react": "^1.6.0",
+    "@convex-dev/auth": "^0.0.94",
     "@convex-dev/presence": "^0.4.0",
     "@convex-dev/prosemirror-sync": "^0.2.6",
     "@modelcontextprotocol/sdk": "^1.30.0",
