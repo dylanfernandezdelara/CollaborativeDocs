@@ -9,7 +9,8 @@ export function userOwnerId(userId: string): string {
   return `user:${userId}`;
 }
 
-export async function resolveOwnerId(
+/** Owner id used when creating a document. */
+export async function resolveCreateOwnerId(
   ctx: QueryCtx | MutationCtx,
   localOwnerId: string | undefined,
 ): Promise<string | null> {

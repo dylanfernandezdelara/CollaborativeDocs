@@ -13,8 +13,8 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { editorExtensions } from "@/lib/editorExtensions";
+import { resolveDisplayName } from "@/lib/displayName";
 import { useOwnerKey } from "@/lib/ownerKey";
-import { resolveDisplayName, useDisplayName } from "@/lib/useDisplayName";
 import { useTiptapSync } from "@convex-dev/prosemirror-sync/tiptap";
 import usePresence from "@convex-dev/presence/react";
 import {
@@ -135,11 +135,9 @@ export default function DocPage({
   const { docId: docIdParam } = use(params);
   const docId = docIdParam as Id<"documents">;
 
-  const { name, loaded: nameLoaded } = useDisplayName();
   const { ownerKey, loaded: ownerLoaded } = useOwnerKey();
   const user = useQuery(api.users.current);
   const displayName = resolveDisplayName({
-    storedName: name,
     githubName: user?.name ?? null,
     ownerKey,
   });
@@ -188,8 +186,6 @@ export default function DocPage({
     setComposeAnchor(anchorText);
     setCommentsOpen(true);
   }
-
-  if (!nameLoaded || !ownerLoaded) return null;
 
   if (doc === undefined) return null;
 

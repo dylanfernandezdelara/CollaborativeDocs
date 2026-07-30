@@ -7,7 +7,7 @@ import { localOwnerId, useOwnerKey } from "@/lib/ownerKey";
 import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { useEffect, useRef, useState } from "react";
+import { useState } from "react";
 
 function formatDate(timestamp: number): string {
   return new Date(timestamp).toLocaleDateString(undefined, {
@@ -26,17 +26,7 @@ export default function HomePage() {
     loaded && localId ? { localOwnerId: localId } : "skip",
   );
   const createDoc = useMutation(api.documents.create);
-  const claimLocalDocuments = useMutation(api.users.claimLocalDocuments);
-  const user = useQuery(api.users.current);
   const [creating, setCreating] = useState(false);
-  const claimedForUser = useRef<string | null>(null);
-
-  useEffect(() => {
-    if (!user || !localId) return;
-    if (claimedForUser.current === user._id) return;
-    claimedForUser.current = user._id;
-    void claimLocalDocuments({ localOwnerId: localId });
-  }, [claimLocalDocuments, localId, user]);
 
   async function handleCreate() {
     if (!localId) return;
@@ -74,7 +64,9 @@ export default function HomePage() {
 
       <section className="mt-12">
         <h2 className="text-[13px] font-medium text-[#5D5D5D]">Documents</h2>
-        {!loaded || docs === undefined ? null : docs.length === 0 ? (
+        {!loaded || docs === undefined ? (
+          <p className="mt-3 text-[13px] text-[#9E9E9E]">Loading…</p>
+        ) : docs.length === 0 ? (
           <p className="mt-3 text-[13px] text-[#9E9E9E]">No documents yet.</p>
         ) : (
           <ul className="mt-3 divide-y divide-[rgba(0,0,0,0.08)]">

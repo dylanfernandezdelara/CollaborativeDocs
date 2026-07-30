@@ -1,8 +1,14 @@
+import { getAuthUserId } from "@convex-dev/auth/server";
 import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { prosemirrorSync } from "./prosemirror";
 import { markdownToPmNodes } from "./lib/markdown";
-import { resolveOwnerId } from "./lib/owner";
+import {
+  isLocalOwnerId,
+  resolveCreateOwnerId,
+  userOwnerId,
+} from "./lib/owner";
+import type { Doc } from "./_generated/dataModel";
 
 const SEED_MARKDOWN = `# Product Roadmap
 
@@ -21,13 +27,22 @@ Add permissions, audit trails, and compliance controls so teams can adopt agent-
 |Milestone 1|Dylan|In progress|Aug 2026|
 |Milestone 2|Unassigned|Not started|Oct 2026|`;
 
-const documentValidator = v.object({
+/** Public shape — never expose ownerId (cookie UUID is the anonymous secret). */
+const documentPublicValidator = v.object({
   _id: v.id("documents"),
   _creationTime: v.number(),
   title: v.string(),
   createdAt: v.number(),
-  ownerId: v.optional(v.string()),
 });
+
+function toPublicDoc(doc: Doc<"documents">) {
+  return {
+    _id: doc._id,
+    _creationTime: doc._creationTime,
+    title: doc.title,
+    createdAt: doc.createdAt,
+  };
+}
 
 export const create = mutation({
   args: {
@@ -36,7 +51,7 @@ export const create = mutation({
   },
   returns: v.id("documents"),
   handler: async (ctx, args) => {
-    const ownerId = await resolveOwnerId(ctx, args.localOwnerId);
+    const ownerId = await resolveCreateOwnerId(ctx, args.localOwnerId);
     if (!ownerId) {
       throw new Error("Missing local identity");
     }
@@ -61,25 +76,50 @@ export const list = query({
   args: {
     localOwnerId: v.optional(v.string()),
   },
-  returns: v.array(documentValidator),
+  returns: v.array(documentPublicValidator),
   handler: async (ctx, args) => {
-    const ownerId = await resolveOwnerId(ctx, args.localOwnerId);
-    if (!ownerId) {
-      return [];
+    const byId = new Map<string, Doc<"documents">>();
+
+    const userId = await getAuthUserId(ctx);
+    if (userId) {
+      const userDocs = await ctx.db
+        .query("documents")
+        .withIndex("by_owner", (q) => q.eq("ownerId", userOwnerId(userId)))
+        .order("desc")
+        .take(50);
+      for (const doc of userDocs) {
+        byId.set(doc._id, doc);
+      }
     }
 
-    return await ctx.db
-      .query("documents")
-      .withIndex("by_owner", (q) => q.eq("ownerId", ownerId))
-      .order("desc")
-      .take(50);
+    // Always include cookie-owned docs so GitHub sign-in stays optional and
+    // signing out does not wipe the home list.
+    if (args.localOwnerId && isLocalOwnerId(args.localOwnerId)) {
+      const localDocs = await ctx.db
+        .query("documents")
+        .withIndex("by_owner", (q) => q.eq("ownerId", args.localOwnerId))
+        .order("desc")
+        .take(50);
+      for (const doc of localDocs) {
+        byId.set(doc._id, doc);
+      }
+    }
+
+    return [...byId.values()]
+      .sort((a, b) => b.createdAt - a.createdAt)
+      .slice(0, 50)
+      .map(toPublicDoc);
   },
 });
 
 export const get = query({
   args: { id: v.id("documents") },
-  returns: v.union(documentValidator, v.null()),
+  returns: v.union(documentPublicValidator, v.null()),
   handler: async (ctx, args) => {
-    return await ctx.db.get("documents", args.id);
+    const doc = await ctx.db.get("documents", args.id);
+    if (!doc) {
+      return null;
+    }
+    return toPublicDoc(doc);
   },
 });

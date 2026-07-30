@@ -12,8 +12,13 @@ export function GitHubAuthButton() {
   const { signIn, signOut } = useAuthActions();
   const [pending, setPending] = useState(false);
 
+  // Optional control only — never gate the home page on auth.
   if (isLoading) {
-    return null;
+    return (
+      <span className="text-[12px] text-[#9E9E9E]" aria-hidden>
+        &nbsp;
+      </span>
+    );
   }
 
   if (isAuthenticated && user) {
@@ -44,14 +49,14 @@ export function GitHubAuthButton() {
       type="button"
       variant="ghost"
       size="sm"
-      className="text-[13px] text-[#5D5D5D]"
+      className="text-[13px] text-[#9E9E9E]"
       disabled={pending}
       onClick={() => {
         setPending(true);
         void signIn("github").finally(() => setPending(false));
       }}
     >
-      {pending ? "Redirecting…" : "Sign in with GitHub"}
+      {pending ? "Redirecting…" : "GitHub"}
     </Button>
   );
 }
