@@ -91,14 +91,14 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[min(90dvh,40rem)] grid-rows-[auto_minmax(0,1fr)] max-w-md border-[rgba(0,0,0,0.10)] sm:max-w-md">
+      <DialogContent className="flex max-h-[min(90dvh,40rem)] max-w-md flex-col overflow-hidden border-[rgba(0,0,0,0.10)] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-[14px] font-medium text-[#292929]">
             Share
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-4 overflow-y-auto">
+        <div className="flex min-h-0 flex-1 flex-col gap-4 overflow-y-auto">
           <section>
             <h3 className="text-[13px] font-medium text-[#292929]">
               Invite an agent
