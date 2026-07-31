@@ -82,7 +82,7 @@ export function GitHubSignInButton() {
     return (
       <Link
         href="/"
-        className="inline-flex h-9 items-center justify-center rounded-full bg-primary px-5 text-[13px] font-medium text-primary-foreground transition-colors hover:bg-primary/80"
+        className="inline-flex h-9 items-center justify-center rounded-full bg-ink px-5 text-[13px] font-medium text-page transition-colors hover:bg-ink/80"
       >
         Go to documents
       </Link>
@@ -94,7 +94,7 @@ export function GitHubSignInButton() {
       type="button"
       variant="default"
       size="lg"
-      className="relative h-10 w-full justify-center rounded-lg px-3 text-[14px]"
+      className="relative h-10 w-full justify-center rounded-lg bg-ink px-3 text-[14px] text-page hover:bg-ink/80"
       disabled={isLoading || pending}
       onClick={() => {
         setPending(true);
@@ -108,7 +108,7 @@ export function GitHubSignInButton() {
       </span>
       <span>{pending ? "Redirecting…" : "Continue with GitHub"}</span>
       {lastProvider === "github" ? (
-        <span className="absolute right-3 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-2 py-0.5 text-[12px] font-normal text-primary-foreground/80">
+        <span className="absolute right-3 rounded-full border border-page/20 bg-page/10 px-2 py-0.5 text-[12px] font-normal text-page/80">
           Last Used
         </span>
       ) : null}
