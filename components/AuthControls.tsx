@@ -6,7 +6,7 @@ import { rememberAuthProvider, useLastAuthProvider } from "@/lib/lastAuthProvide
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import Link from "next/link";
-import { useCallback, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 
 function GitHubIcon() {
   return (
@@ -25,20 +25,15 @@ export function AuthNav({ localOwnerId }: { localOwnerId?: string }) {
   const claim = useMutation(api.documents.claim);
   const { signOut } = useAuthActions();
   const [signingOut, setSigningOut] = useState(false);
-  const [syncFailed, setSyncFailed] = useState(false);
-
-  const syncCurrentDevice = useCallback(async () => {
-    if (!localOwnerId) return;
-    await claim({ localOwnerId });
-    setSyncFailed(false);
-  }, [claim, localOwnerId]);
 
   useEffect(() => {
     if (!isAuthenticated) return;
 
     rememberAuthProvider("github");
-    void syncCurrentDevice().catch(() => setSyncFailed(true));
-  }, [isAuthenticated, syncCurrentDevice]);
+    if (localOwnerId) {
+      void claim({ localOwnerId }).catch(() => undefined);
+    }
+  }, [claim, isAuthenticated, localOwnerId]);
 
   if (isLoading) {
     return <span className="h-7 w-14" aria-hidden="true" />;
@@ -57,19 +52,6 @@ export function AuthNav({ localOwnerId }: { localOwnerId?: string }) {
 
   return (
     <div className="flex min-w-0 items-center gap-2">
-      {syncFailed ? (
-        <Button
-          type="button"
-          variant="ghost"
-          size="xs"
-          className="text-[12px] text-ink-tertiary"
-          onClick={() => {
-            void syncCurrentDevice().catch(() => setSyncFailed(true));
-          }}
-        >
-          Retry sync
-        </Button>
-      ) : null}
       <span className="max-w-32 truncate text-[12px] text-ink-tertiary">
         {user?.name ?? user?.email ?? "Signed in"}
       </span>
