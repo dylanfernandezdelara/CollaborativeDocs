@@ -21,26 +21,21 @@ export default function HomePage() {
   const router = useRouter();
   const { ownerKey, loaded } = useOwnerKey();
   const localId = ownerKey ? localOwnerId(ownerKey) : undefined;
-  // Until production Convex is redeployed (CONVEX_DEPLOY_KEY on Vercel), the
-  // live backend only accepts list({}). Set NEXT_PUBLIC_DOCS_OWNER_SCOPING=1
-  // after that deploy to restore cookie-scoped lists.
-  const ownerScoping =
-    process.env.NEXT_PUBLIC_DOCS_OWNER_SCOPING === "1" && !!localId;
   const docs = useQuery(
     api.documents.list,
-    !loaded ? "skip" : ownerScoping ? { localOwnerId: localId } : {},
+    !loaded || !localId ? "skip" : { localOwnerId: localId },
   );
   const createDoc = useMutation(api.documents.create);
   const [creating, setCreating] = useState(false);
 
   async function handleCreate() {
+    if (!localId) return;
     setCreating(true);
     try {
-      const docId = await createDoc(
-        ownerScoping && localId
-          ? { title: "Product Roadmap", localOwnerId: localId }
-          : { title: "Product Roadmap" },
-      );
+      const docId = await createDoc({
+        title: "Product Roadmap",
+        localOwnerId: localId,
+      });
       router.push(`/d/${docId}`);
     } finally {
       setCreating(false);
@@ -60,7 +55,7 @@ export default function HomePage() {
 
       <Button
         onClick={() => void handleCreate()}
-        disabled={creating || !loaded}
+        disabled={creating || !loaded || !localId}
         className="mt-8 w-fit rounded-full px-5 text-[13px]"
       >
         {creating ? "Creating…" : "New document"}
