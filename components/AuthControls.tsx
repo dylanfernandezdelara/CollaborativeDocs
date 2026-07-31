@@ -90,28 +90,30 @@ export function GitHubSignInButton() {
   }
 
   return (
-    <Button
-      type="button"
-      variant="default"
-      size="lg"
-      className="relative h-10 w-full justify-center rounded-lg bg-ink px-3 text-[14px] text-page hover:bg-ink/80"
-      disabled={isLoading || pending}
-      onClick={() => {
-        setPending(true);
-        void signIn("github", { redirectTo: "/" }).finally(() =>
-          setPending(false),
-        );
-      }}
-    >
-      <span className="size-4">
-        <GitHubIcon />
-      </span>
-      <span>{pending ? "Redirecting…" : "Continue with GitHub"}</span>
+    <div className="relative pt-2">
+      <Button
+        type="button"
+        variant="default"
+        size="lg"
+        className="h-10 w-full justify-center rounded-lg bg-ink px-3 text-[14px] text-page hover:bg-ink/80"
+        disabled={isLoading || pending}
+        onClick={() => {
+          setPending(true);
+          void signIn("github", { redirectTo: "/" }).finally(() =>
+            setPending(false),
+          );
+        }}
+      >
+        <span className="size-4">
+          <GitHubIcon />
+        </span>
+        <span>{pending ? "Redirecting…" : "Continue with GitHub"}</span>
+      </Button>
       {lastProvider === "github" ? (
-        <span className="absolute -top-2 right-1 rounded-full border border-ink/15 bg-page-elevated px-2 py-0.5 text-[12px] font-normal text-ink-tertiary">
+        <span className="pointer-events-none absolute top-0 right-1 z-10 rounded-full border border-ink/15 bg-page-elevated px-2 py-0.5 text-[12px] font-normal text-ink-tertiary">
           Last Used
         </span>
       ) : null}
-    </Button>
+    </div>
   );
 }
