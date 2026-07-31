@@ -12,7 +12,7 @@ import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { XIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Agent = {
   _id: Id<"agents">;
@@ -49,7 +49,7 @@ function SendToAgentButton({
       <Button
         variant="ghost"
         size="sm"
-        className="h-6 px-2 text-[12px] text-[#5D5D5D]"
+        className="h-6 px-2 text-[12px] text-ink-secondary"
         onClick={() => void sendToAgent({ commentId, agentId: agent._id })}
       >
         Send to agent
@@ -64,7 +64,7 @@ function SendToAgentButton({
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 px-2 text-[12px] text-[#5D5D5D]"
+            className="h-6 px-2 text-[12px] text-ink-secondary"
           />
         }
       >
@@ -107,6 +107,31 @@ export function CommentsPanel({
   const [composeText, setComposeText] = useState("");
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
 
+  // Below md the panel covers the whole viewport, so lock body scroll while
+  // it is open. On md+ it is a side rail and the page should keep scrolling.
+  useEffect(() => {
+    if (!open) return;
+    const mql = window.matchMedia("(max-width: 767px)");
+    const apply = () => {
+      document.body.style.overflow = mql.matches ? "hidden" : "";
+    };
+    apply();
+    mql.addEventListener("change", apply);
+    return () => {
+      mql.removeEventListener("change", apply);
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
   if (!open) return null;
 
   const roots = (comments ?? []).filter((c) => !c.parentId);
@@ -146,18 +171,27 @@ export function CommentsPanel({
   }
 
   return (
-    <aside className="fixed inset-y-0 right-0 z-40 flex w-[320px] flex-col border-l border-[rgba(0,0,0,0.10)] bg-[#FAFAFA]">
-      <div className="flex h-12 shrink-0 items-center justify-between border-b border-[rgba(0,0,0,0.10)] px-4">
-        <h2 className="text-[14px] font-medium text-[#292929]">Comments</h2>
-        <Button variant="ghost" size="icon-sm" onClick={onClose}>
-          <XIcon className="size-4 text-[#9E9E9E]" />
+    <aside
+      role="dialog"
+      aria-label="Comments"
+      className="fixed inset-0 z-50 flex flex-col bg-page md:inset-y-0 md:left-auto md:right-0 md:z-40 md:w-[320px] md:border-l md:border-ink/10"
+    >
+      <div className="flex h-12 shrink-0 items-center justify-between border-b border-ink/10 px-4">
+        <h2 className="text-[14px] font-medium text-ink">Comments</h2>
+        <Button
+          variant="ghost"
+          size="icon-sm"
+          onClick={onClose}
+          aria-label="Close comments"
+        >
+          <XIcon className="size-4 text-ink-tertiary" />
         </Button>
       </div>
 
       {composeAnchor !== null && (
-        <div className="border-b border-[rgba(0,0,0,0.10)] p-4">
-          <p className="text-[12px] text-[#9E9E9E]">New comment on</p>
-          <blockquote className="mt-1 border-l-2 border-[rgba(0,0,0,0.10)] pl-2 text-[12px] text-[#5D5D5D]">
+        <div className="border-b border-ink/10 p-4">
+          <p className="text-[12px] text-ink-tertiary">New comment on</p>
+          <blockquote className="mt-1 border-l-2 border-ink/10 pl-2 text-[12px] text-ink-secondary">
             {composeAnchor}
           </blockquote>
           <Textarea
@@ -165,9 +199,9 @@ export function CommentsPanel({
             value={composeText}
             onChange={(e) => setComposeText(e.target.value)}
             placeholder="Write a comment…"
-            className="mt-2 min-h-16 text-[13px]"
+            className="mt-2 min-h-16 text-[16px] sm:text-[13px]"
           />
-          <div className="mt-2 flex gap-2">
+          <div className="mt-2 flex flex-wrap gap-2">
             <Button
               size="sm"
               className="rounded-full text-[13px]"
@@ -179,7 +213,7 @@ export function CommentsPanel({
             <Button
               variant="ghost"
               size="sm"
-              className="text-[13px] text-[#5D5D5D]"
+              className="text-[13px] text-ink-secondary"
               onClick={() => {
                 setComposeText("");
                 onClearCompose();
@@ -194,7 +228,7 @@ export function CommentsPanel({
       <ScrollArea className="flex-1">
         <div className="space-y-4 p-4">
           {roots.length === 0 && composeAnchor === null && (
-            <p className="text-[13px] text-[#9E9E9E]">
+            <p className="text-[13px] text-ink-tertiary">
               Select text in the document to add a comment.
             </p>
           )}
@@ -209,19 +243,19 @@ export function CommentsPanel({
                 }
               >
                 {comment.anchorText && (
-                  <blockquote className="mb-1 border-l-2 border-[rgba(0,0,0,0.10)] pl-2 text-[12px] text-[#9E9E9E]">
+                  <blockquote className="mb-1 border-l-2 border-ink/10 pl-2 text-[12px] text-ink-tertiary">
                     {comment.anchorText}
                   </blockquote>
                 )}
-                <p className="text-[13px] text-[#292929]">{comment.text}</p>
-                <p className="mt-0.5 text-[12px] text-[#9E9E9E]">
+                <p className="text-[13px] text-ink">{comment.text}</p>
+                <p className="mt-0.5 text-[12px] text-ink-tertiary">
                   {comment.authorName}
                 </p>
 
                 {replies.map((reply) => (
-                  <div key={reply._id} className="ml-4 mt-3 border-l border-[rgba(0,0,0,0.08)] pl-3">
-                    <p className="text-[13px] text-[#292929]">{reply.text}</p>
-                    <p className="mt-0.5 text-[12px] text-[#9E9E9E]">
+                  <div key={reply._id} className="ml-4 mt-3 border-l border-ink/8 pl-3">
+                    <p className="text-[13px] text-ink">{reply.text}</p>
+                    <p className="mt-0.5 text-[12px] text-ink-tertiary">
                       {reply.authorName}
                     </p>
                   </div>
@@ -238,13 +272,13 @@ export function CommentsPanel({
                         }))
                       }
                       placeholder="Reply…"
-                      className="min-h-12 text-[13px]"
+                      className="min-h-12 text-[16px] sm:text-[13px]"
                     />
-                    <div className="flex items-center gap-1">
+                    <div className="flex flex-wrap items-center gap-1">
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 px-2 text-[12px] text-[#5D5D5D]"
+                        className="h-6 px-2 text-[12px] text-ink-secondary"
                         disabled={!(replyTexts[comment._id] ?? "").trim()}
                         onClick={() => void submitReply(comment._id)}
                       >

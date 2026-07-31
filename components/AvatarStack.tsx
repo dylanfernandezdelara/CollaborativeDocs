@@ -55,14 +55,14 @@ function PresenceAvatar({
                 className={
                   backgroundColor
                     ? "bg-transparent text-[10px] text-white"
-                    : "text-[10px] text-[#5D5D5D]"
+                    : "text-[10px] text-ink-secondary"
                 }
               >
                 {getInitials(name)}
               </AvatarFallback>
             </Avatar>
             {showDot && (
-              <span className="absolute -right-0.5 -bottom-0.5 size-2 rounded-full border border-[#FAFAFA] bg-[#22c55e]" />
+              <span className="absolute -right-0.5 -bottom-0.5 size-2 rounded-full border border-page bg-[#22c55e]" />
             )}
           </div>
         }
@@ -88,7 +88,7 @@ export function AvatarStack({
 
   return (
     <TooltipProvider delay={200}>
-      <div className="flex -space-x-1.5">
+      <div className="flex shrink-0 -space-x-1.5">
         {onlineHumans.map((human) => (
           <PresenceAvatar
             key={human.userId}

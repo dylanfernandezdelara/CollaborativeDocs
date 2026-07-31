@@ -24,17 +24,39 @@ import {
   useCurrentEditor,
 } from "@tiptap/react";
 import type { Editor } from "@tiptap/core";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
+import { HistoryIcon, MessageSquareIcon, ShareIcon } from "lucide-react";
 import Link from "next/link";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
+// Fallbacks for the first paint, before the pill can be measured.
+const COMMENT_BTN_FALLBACK_WIDTH = 88;
+const COMMENT_BTN_FALLBACK_HEIGHT = 32;
+const COMMENT_BTN_MARGIN = 8;
+
+function clampCommentButtonPosition(
+  top: number,
+  left: number,
+  size: { width: number; height: number },
+): { top: number; left: number } {
+  const maxLeft = window.innerWidth - size.width - COMMENT_BTN_MARGIN;
+  const maxTop = window.innerHeight - size.height - COMMENT_BTN_MARGIN;
+  return {
+    top: Math.min(Math.max(COMMENT_BTN_MARGIN, top), Math.max(COMMENT_BTN_MARGIN, maxTop)),
+    left: Math.min(Math.max(COMMENT_BTN_MARGIN, left), Math.max(COMMENT_BTN_MARGIN, maxLeft)),
+  };
+}
+
 function SelectionCommentButton({
   onComment,
+  hideOnMobile,
 }: {
   onComment: (anchorText: string) => void;
+  hideOnMobile: boolean;
 }) {
   const { editor } = useCurrentEditor();
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(
     null,
   );
@@ -56,15 +78,23 @@ function SelectionCommentButton({
         return;
       }
 
+      const rect = buttonRef.current?.getBoundingClientRect();
       const coords = editor.view.coordsAtPos(to);
-      setPosition({ top: coords.bottom + 6, left: coords.left });
+      setPosition(
+        clampCommentButtonPosition(coords.bottom + 6, coords.left, {
+          width: rect?.width || COMMENT_BTN_FALLBACK_WIDTH,
+          height: rect?.height || COMMENT_BTN_FALLBACK_HEIGHT,
+        }),
+      );
       setAnchorText(text);
     };
 
     update();
     editor.on("selectionUpdate", update);
+    window.addEventListener("resize", update);
     return () => {
       editor.off("selectionUpdate", update);
+      window.removeEventListener("resize", update);
     };
   }, [editor]);
 
@@ -72,8 +102,11 @@ function SelectionCommentButton({
 
   return createPortal(
     <Button
+      ref={buttonRef}
       size="sm"
-      className="fixed z-50 rounded-full text-[12px] shadow-sm"
+      className={`fixed z-40 rounded-full text-[12px] shadow-sm ${
+        hideOnMobile ? "hidden md:inline-flex" : ""
+      }`}
       style={{ top: position.top, left: position.left }}
       onMouseDown={(e) => e.preventDefault()}
       onClick={() => onComment(anchorText)}
@@ -144,7 +177,8 @@ export default function DocPage({
 
   const { ownerKey, loaded: ownerLoaded } = useOwnerKey();
   const localId = ownerKey ? localOwnerId(ownerKey) : undefined;
-  const user = useQuery(api.users.current);
+  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
+  const user = useQuery(api.users.current, isAuthenticated ? {} : "skip");
   const displayName = resolveDisplayName({
     githubName: user?.name ?? null,
     ownerKey,
@@ -166,7 +200,8 @@ export default function DocPage({
     inviteToken,
     localId,
     ownerLoaded,
-    userSettled: user !== undefined,
+    // Skipped auth queries stay undefined — treat signed-out as settled.
+    userSettled: !authLoading && (!isAuthenticated || user !== undefined),
     displayName,
   });
 
@@ -204,13 +239,29 @@ export default function DocPage({
     setCommentsOpen(true);
   }
 
+  const headerActions: Array<{
+    label: string;
+    icon: typeof ShareIcon;
+    onClick: () => void;
+    pressed?: boolean;
+  }> = [
+    { label: "Share", icon: ShareIcon, onClick: () => setShareOpen(true) },
+    {
+      label: "Comments",
+      icon: MessageSquareIcon,
+      onClick: () => setCommentsOpen((v) => !v),
+      pressed: commentsOpen,
+    },
+    { label: "History", icon: HistoryIcon, onClick: () => setHistoryOpen(true) },
+  ];
+
   if (doc === undefined) return null;
 
   if (doc === null) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#FAFAFA]">
-        <p className="text-[14px] text-[#5D5D5D]">Document not found.</p>
-        <Link href="/" className="text-[13px] text-[#292929] underline">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3">
+        <p className="text-[14px] text-ink-secondary">Document not found.</p>
+        <Link href="/" className="text-[13px] text-ink underline">
           Back home
         </Link>
       </div>
@@ -219,55 +270,46 @@ export default function DocPage({
 
   return (
     <div
-      className="min-h-screen bg-[#FAFAFA]"
-      style={{ paddingRight: commentsOpen ? 320 : 0 }}
+      className={`min-h-screen ${commentsOpen ? "md:pr-[320px]" : ""}`}
     >
-      <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-[rgba(0,0,0,0.10)] bg-[#FAFAFA]/95 px-4 backdrop-blur-sm">
-        <div className="flex min-w-0 items-center gap-3">
+      <header className="sticky top-0 z-30 flex h-12 items-center justify-between gap-2 border-b border-ink/10 bg-page/90 px-3 backdrop-blur-sm sm:gap-3 sm:px-4">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Link
             href="/"
-            className="shrink-0 text-[12px] text-[#9E9E9E] hover:text-[#5D5D5D]"
+            className="shrink-0 text-[12px] text-ink-tertiary hover:text-ink-secondary"
           >
             CollabDocs
           </Link>
-          <span className="truncate text-[14px] font-medium text-[#292929]">
+          <span className="truncate text-[14px] font-medium text-ink">
             {doc.title}
           </span>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3">
-          <AvatarStack
-            humans={presenceState ?? []}
-            agents={onlineAgents}
-          />
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[13px] text-[#5D5D5D]"
-            onClick={() => setShareOpen(true)}
-          >
-            Share
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[13px] text-[#5D5D5D]"
-            onClick={() => setCommentsOpen((v) => !v)}
-          >
-            Comments
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="text-[13px] text-[#5D5D5D]"
-            onClick={() => setHistoryOpen(true)}
-          >
-            History
-          </Button>
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
+          <div className="mr-0.5 sm:mr-1">
+            <AvatarStack
+              humans={presenceState ?? []}
+              agents={onlineAgents}
+            />
+          </div>
+          {headerActions.map(({ label, icon: Icon, onClick, pressed }) => (
+            <Button
+              key={label}
+              variant="ghost"
+              size="sm"
+              className="w-7 px-0 text-ink-secondary md:w-auto md:px-2.5"
+              aria-label={label}
+              aria-pressed={pressed}
+              onClick={onClick}
+            >
+              <Icon className="size-3.5 md:hidden" />
+              <span className="hidden text-[13px] md:inline">{label}</span>
+            </Button>
+          ))}
         </div>
       </header>
 
-      <main className="mx-auto max-w-[640px] px-4 pt-16 pb-24">
+      <main className="mx-auto max-w-[640px] px-4 pt-10 pb-20 sm:pt-16 sm:pb-24">
         {sync.isLoading ? null : sync.initialContent !== null ? (
           <EditorProvider
             extensions={extensions}
@@ -283,7 +325,10 @@ export default function DocPage({
             }}
           >
             <EditorContent editor={null} />
-            <SelectionCommentButton onComment={handleStartComment} />
+            <SelectionCommentButton
+              onComment={handleStartComment}
+              hideOnMobile={commentsOpen}
+            />
             <EditorHighlights intents={intents} comments={comments} />
           </EditorProvider>
         ) : null}

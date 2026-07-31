@@ -21,21 +21,26 @@ export default function HomePage() {
   const router = useRouter();
   const { ownerKey, loaded } = useOwnerKey();
   const localId = ownerKey ? localOwnerId(ownerKey) : undefined;
+  // Until production Convex is redeployed (CONVEX_DEPLOY_KEY on Vercel), the
+  // live backend only accepts list({}). Set NEXT_PUBLIC_DOCS_OWNER_SCOPING=1
+  // after that deploy to restore cookie-scoped lists.
+  const ownerScoping =
+    process.env.NEXT_PUBLIC_DOCS_OWNER_SCOPING === "1" && !!localId;
   const docs = useQuery(
     api.documents.list,
-    loaded && localId ? { localOwnerId: localId } : "skip",
+    !loaded ? "skip" : ownerScoping ? { localOwnerId: localId } : {},
   );
   const createDoc = useMutation(api.documents.create);
   const [creating, setCreating] = useState(false);
 
   async function handleCreate() {
-    if (!localId) return;
     setCreating(true);
     try {
-      const docId = await createDoc({
-        title: "Product Roadmap",
-        localOwnerId: localId,
-      });
+      const docId = await createDoc(
+        ownerScoping && localId
+          ? { title: "Product Roadmap", localOwnerId: localId }
+          : { title: "Product Roadmap" },
+      );
       router.push(`/d/${docId}`);
     } finally {
       setCreating(false);
@@ -43,41 +48,42 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col px-4 py-24">
-      <div className="flex items-start justify-between gap-4">
-        <div>
-          <h1 className="text-[24px] font-medium text-[#292929]">CollabDocs</h1>
-          <p className="mt-2 text-[14px] text-[#5D5D5D]">
-            A quiet space for humans and agents to write together.
-          </p>
+    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col px-4 py-12 sm:py-24">
+      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
+        <div className="min-w-0 flex-1">
+          <h1 className="text-[24px] font-medium text-ink">CollabDocs</h1>
         </div>
-        <GitHubAuthButton />
+        <div className="shrink-0">
+          <GitHubAuthButton />
+        </div>
       </div>
 
       <Button
         onClick={() => void handleCreate()}
-        disabled={creating || !localId}
+        disabled={creating || !loaded}
         className="mt-8 w-fit rounded-full px-5 text-[13px]"
       >
         {creating ? "Creating…" : "New document"}
       </Button>
 
-      <section className="mt-12">
-        <h2 className="text-[13px] font-medium text-[#5D5D5D]">Documents</h2>
+      <section className="mt-10 sm:mt-12">
+        <h2 className="text-[13px] font-medium text-ink-secondary">Documents</h2>
         {!loaded || docs === undefined ? (
-          <p className="mt-3 text-[13px] text-[#9E9E9E]">Loading…</p>
+          <p className="mt-3 text-[13px] text-ink-tertiary">Loading…</p>
         ) : docs.length === 0 ? (
-          <p className="mt-3 text-[13px] text-[#9E9E9E]">No documents yet.</p>
+          <p className="mt-3 text-[13px] text-ink-tertiary">No documents yet.</p>
         ) : (
-          <ul className="mt-3 divide-y divide-[rgba(0,0,0,0.08)]">
+          <ul className="mt-3 divide-y divide-ink/8">
             {docs.map((doc) => (
               <li key={doc._id}>
                 <Link
                   href={`/d/${doc._id}`}
-                  className="flex items-baseline justify-between py-3 hover:opacity-80"
+                  className="flex items-baseline justify-between gap-3 py-3 hover:opacity-80"
                 >
-                  <span className="text-[14px] text-[#292929]">{doc.title}</span>
-                  <span className="text-[13px] text-[#9E9E9E]">
+                  <span className="min-w-0 truncate text-[14px] text-ink">
+                    {doc.title}
+                  </span>
+                  <span className="shrink-0 text-[13px] text-ink-tertiary">
                     {formatDate(doc.createdAt)}
                   </span>
                 </Link>

@@ -11,7 +11,10 @@ type Options = {
   inviteToken: string | undefined;
   localId: string | undefined;
   ownerLoaded: boolean;
-  /** undefined while the auth query is still loading */
+  /**
+   * True once we know whether a GitHub profile name is available.
+   * When auth is skipped (signed out), this should be true immediately.
+   */
   userSettled: boolean;
   displayName: string;
 };

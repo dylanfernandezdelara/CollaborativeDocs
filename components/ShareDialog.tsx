@@ -65,7 +65,7 @@ function SegmentedControl({
     <div
       role="tablist"
       aria-label="Invite type"
-      className="inline-flex rounded-lg border border-[rgba(0,0,0,0.10)] bg-[#F2F2F1] p-0.5"
+      className="inline-flex rounded-lg border border-ink/10 bg-surface-hover p-0.5"
     >
       {options.map((option) => {
         const selected = value === option.id;
@@ -78,8 +78,8 @@ function SegmentedControl({
             onClick={() => onChange(option.id)}
             className={
               selected
-                ? "rounded-md bg-white px-3 py-1 text-[12px] font-medium text-[#292929] shadow-sm"
-                : "rounded-md px-3 py-1 text-[12px] text-[#5D5D5D] hover:text-[#292929]"
+                ? "rounded-md bg-page-elevated px-3 py-1 text-[12px] font-medium text-ink shadow-sm"
+                : "rounded-md px-3 py-1 text-[12px] text-ink-secondary hover:text-ink"
             }
           >
             {option.label}
@@ -105,18 +105,18 @@ function CopyableBlock({
     <button
       type="button"
       onClick={onCopy}
-      className="group flex w-full cursor-pointer items-start gap-3 rounded-lg border border-[rgba(0,0,0,0.10)] bg-[#FAFAFA] p-3 text-left transition-colors hover:border-[rgba(0,0,0,0.20)] hover:bg-[#F2F2F1]"
+      className="group flex w-full cursor-pointer items-start gap-3 rounded-lg border border-ink/10 bg-page p-3 text-left transition-colors hover:border-ink/20 hover:bg-surface-hover"
     >
       {multiline ? (
-        <pre className="min-w-0 flex-1 whitespace-pre-wrap break-all text-[12px] leading-relaxed text-[#5D5D5D]">
+        <pre className="min-w-0 flex-1 whitespace-pre-wrap break-all text-[12px] leading-relaxed text-ink-secondary">
           {text}
         </pre>
       ) : (
-        <code className="min-w-0 flex-1 break-all text-[12px] leading-relaxed text-[#5D5D5D]">
+        <code className="min-w-0 flex-1 break-all text-[12px] leading-relaxed text-ink-secondary">
           {text}
         </code>
       )}
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-[rgba(0,0,0,0.10)] bg-white text-[#5D5D5D] group-hover:text-[#292929]">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-ink/10 bg-page-elevated text-ink-secondary group-hover:text-ink">
         {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
       </span>
     </button>
@@ -267,16 +267,16 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="flex max-h-[min(90vh,720px)] max-w-md flex-col overflow-hidden border-[rgba(0,0,0,0.10)] p-0 sm:max-w-md">
+      <DialogContent className="flex max-h-[min(90dvh,40rem)] max-w-md flex-col overflow-hidden border-ink/10 p-0 sm:max-w-md">
         <DialogHeader className="shrink-0 px-4 pt-4 pr-12">
-          <DialogTitle className="text-[14px] font-medium text-[#292929]">
+          <DialogTitle className="text-[14px] font-medium text-ink">
             Share
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4">
           <section>
-            <p className="text-[12px] text-[#9E9E9E]">
+            <p className="text-[12px] text-ink-tertiary">
               Anyone with the link can edit.
             </p>
             <div className="mt-2">
@@ -287,32 +287,30 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
               />
             </div>
             {copied === "doc" && (
-              <p className="mt-1 text-[12px] text-[#9E9E9E]">Link copied</p>
+              <p className="mt-1 text-[12px] text-ink-tertiary">Link copied</p>
             )}
           </section>
 
           <section>
-            <div className="flex items-center justify-between gap-3">
-              <h3 className="text-[13px] font-medium text-[#292929]">
-                Invite
-              </h3>
+            <div className="flex flex-wrap items-center justify-between gap-3">
+              <h3 className="text-[13px] font-medium text-ink">Invite</h3>
               <SegmentedControl
                 value={inviteKind}
                 onChange={handleKindChange}
               />
             </div>
 
-            <div className="mt-2 flex w-full min-w-0 gap-2">
+            <div className="mt-2 flex w-full min-w-0 flex-col gap-2 sm:flex-row">
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Name"
-                className="h-8 min-w-0 flex-1 text-[13px]"
+                className="h-8 min-w-0 flex-1 text-[16px] sm:text-[13px]"
               />
               <Button
                 onClick={() => void handleCreateInvite()}
                 disabled={!name.trim()}
-                className="shrink-0 rounded-full text-[13px]"
+                className="w-full shrink-0 rounded-full text-[13px] sm:w-auto"
                 size="sm"
               >
                 Create invite
@@ -322,7 +320,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
             {invitePayload && (
               <div className="mt-3 space-y-3">
                 <div>
-                  <p className="mb-1 text-[12px] text-[#9E9E9E]">
+                  <p className="mb-1 text-[12px] text-ink-tertiary">
                     {invitePayload.label}
                   </p>
                   <CopyableBlock
@@ -331,7 +329,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                     onCopy={() => void copyText(invitePayload.text, "invite")}
                   />
                   {copied === "invite" && (
-                    <p className="mt-1 text-[12px] text-[#9E9E9E]">
+                    <p className="mt-1 text-[12px] text-ink-tertiary">
                       Copied to clipboard
                     </p>
                   )}
@@ -342,7 +340,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                     <button
                       type="button"
                       onClick={() => setManualOpen(!manualOpen)}
-                      className="flex items-center gap-1 text-[12px] text-[#5D5D5D] hover:text-[#292929]"
+                      className="flex items-center gap-1 text-[12px] text-ink-secondary hover:text-ink"
                     >
                       {manualOpen ? (
                         <ChevronDown className="size-3.5" />
@@ -368,15 +366,13 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
           </section>
 
           <section>
-            <h3 className="text-[13px] font-medium text-[#292929]">
-              On this doc
-            </h3>
+            <h3 className="text-[13px] font-medium text-ink">On this doc</h3>
             {!accessRows.length ? (
-              <p className="mt-2 text-[12px] text-[#9E9E9E]">
+              <p className="mt-2 text-[12px] text-ink-tertiary">
                 No one invited yet.
               </p>
             ) : (
-              <ul className="mt-2 divide-y divide-[rgba(0,0,0,0.08)]">
+              <ul className="mt-2 divide-y divide-ink/8">
                 {accessRows.map((row) => (
                   <li
                     key={row.key}
@@ -389,12 +385,12 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                           style={{ backgroundColor: row.color }}
                         />
                       ) : (
-                        <span className="size-2 shrink-0 rounded-full bg-[#CFCFCF]" />
+                        <span className="size-2 shrink-0 rounded-full bg-ink-tertiary/40" />
                       )}
-                      <span className="truncate text-[13px] text-[#292929]">
+                      <span className="truncate text-[13px] text-ink">
                         {row.name}
                       </span>
-                      <span className="shrink-0 text-[12px] text-[#9E9E9E]">
+                      <span className="shrink-0 text-[12px] text-ink-tertiary">
                         {statusLabel(row)}
                       </span>
                     </div>
@@ -402,7 +398,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="shrink-0 text-[12px] text-[#5D5D5D]"
+                        className="shrink-0 text-[12px] text-ink-secondary"
                         onClick={() => {
                           if (row.kind === "person") {
                             void revokeHuman({ collaboratorId: row.id });
