@@ -90,6 +90,46 @@ function SegmentedControl({
   );
 }
 
+function CopyableBlock({
+  text,
+  copied,
+  onCopy,
+  multiline = false,
+}: {
+  text: string;
+  copied: boolean;
+  onCopy: () => void;
+  multiline?: boolean;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onCopy}
+      className="group flex w-full cursor-pointer items-start gap-3 rounded-lg border border-[rgba(0,0,0,0.10)] bg-[#FAFAFA] p-3 text-left transition-colors hover:border-[rgba(0,0,0,0.20)] hover:bg-[#F2F2F1]"
+    >
+      {multiline ? (
+        <pre className="min-w-0 flex-1 whitespace-pre-wrap break-all text-[12px] leading-relaxed text-[#5D5D5D]">
+          {text}
+        </pre>
+      ) : (
+        <code className="min-w-0 flex-1 break-all text-[12px] leading-relaxed text-[#5D5D5D]">
+          {text}
+        </code>
+      )}
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-[rgba(0,0,0,0.10)] bg-white text-[#5D5D5D] group-hover:text-[#292929]">
+        {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
+      </span>
+    </button>
+  );
+}
+
+function statusLabel(row: AccessRow): string {
+  if (row.kind === "person") {
+    return row.status;
+  }
+  return row.status === "revoked" ? "agent · revoked" : "agent";
+}
+
 export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
   const agents = useQuery(api.agents.listForDoc, { docId });
   const people = useQuery(api.collaborators.listForDoc, { docId });
@@ -227,34 +267,25 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-h-[min(90vh,720px)] max-w-md overflow-y-auto border-[rgba(0,0,0,0.10)] sm:max-w-md">
-        <DialogHeader>
+      <DialogContent className="flex max-h-[min(90vh,720px)] max-w-md flex-col overflow-hidden border-[rgba(0,0,0,0.10)] p-0 sm:max-w-md">
+        <DialogHeader className="shrink-0 px-4 pt-4 pr-12">
           <DialogTitle className="text-[14px] font-medium text-[#292929]">
             Share
           </DialogTitle>
         </DialogHeader>
 
-        <div className="flex flex-col gap-5">
+        <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4">
           <section>
             <p className="text-[12px] text-[#9E9E9E]">
               Anyone with the link can edit.
             </p>
-            <button
-              type="button"
-              onClick={() => void copyText(docUrl, "doc")}
-              className="group mt-2 flex w-full cursor-pointer items-center gap-3 rounded-lg border border-[rgba(0,0,0,0.10)] bg-[#FAFAFA] p-3 text-left transition-colors hover:border-[rgba(0,0,0,0.20)] hover:bg-[#F2F2F1]"
-            >
-              <code className="min-w-0 flex-1 break-all text-[12px] leading-relaxed text-[#5D5D5D]">
-                {docUrl}
-              </code>
-              <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-[rgba(0,0,0,0.10)] bg-white text-[#5D5D5D] group-hover:text-[#292929]">
-                {copied === "doc" ? (
-                  <Check className="size-4" />
-                ) : (
-                  <Copy className="size-4" />
-                )}
-              </span>
-            </button>
+            <div className="mt-2">
+              <CopyableBlock
+                text={docUrl}
+                copied={copied === "doc"}
+                onCopy={() => void copyText(docUrl, "doc")}
+              />
+            </div>
             {copied === "doc" && (
               <p className="mt-1 text-[12px] text-[#9E9E9E]">Link copied</p>
             )}
@@ -294,22 +325,11 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                   <p className="mb-1 text-[12px] text-[#9E9E9E]">
                     {invitePayload.label}
                   </p>
-                  <button
-                    type="button"
-                    onClick={() => void copyText(invitePayload.text, "invite")}
-                    className="group flex w-full cursor-pointer items-center gap-3 rounded-lg border border-[rgba(0,0,0,0.10)] bg-[#FAFAFA] p-3 text-left transition-colors hover:border-[rgba(0,0,0,0.20)] hover:bg-[#F2F2F1]"
-                  >
-                    <code className="min-w-0 flex-1 break-all text-[12px] leading-relaxed text-[#5D5D5D]">
-                      {invitePayload.text}
-                    </code>
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-[rgba(0,0,0,0.10)] bg-white text-[#5D5D5D] group-hover:text-[#292929]">
-                      {copied === "invite" ? (
-                        <Check className="size-4" />
-                      ) : (
-                        <Copy className="size-4" />
-                      )}
-                    </span>
-                  </button>
+                  <CopyableBlock
+                    text={invitePayload.text}
+                    copied={copied === "invite"}
+                    onCopy={() => void copyText(invitePayload.text, "invite")}
+                  />
                   {copied === "invite" && (
                     <p className="mt-1 text-[12px] text-[#9E9E9E]">
                       Copied to clipboard
@@ -332,22 +352,14 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                       Manual setup
                     </button>
                     {manualOpen && (
-                      <button
-                        type="button"
-                        onClick={() => void copyText(mcpJson, "json")}
-                        className="group mt-2 flex w-full cursor-pointer items-start gap-3 rounded-lg border border-[rgba(0,0,0,0.10)] bg-[#FAFAFA] p-3 text-left transition-colors hover:border-[rgba(0,0,0,0.20)] hover:bg-[#F2F2F1]"
-                      >
-                        <pre className="min-w-0 flex-1 whitespace-pre-wrap break-all text-[12px] leading-relaxed text-[#5D5D5D]">
-                          {mcpJson}
-                        </pre>
-                        <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-[rgba(0,0,0,0.10)] bg-white text-[#5D5D5D] group-hover:text-[#292929]">
-                          {copied === "json" ? (
-                            <Check className="size-4" />
-                          ) : (
-                            <Copy className="size-4" />
-                          )}
-                        </span>
-                      </button>
+                      <div className="mt-2">
+                        <CopyableBlock
+                          text={mcpJson}
+                          copied={copied === "json"}
+                          onCopy={() => void copyText(mcpJson, "json")}
+                          multiline
+                        />
+                      </div>
                     )}
                   </div>
                 )}
@@ -383,11 +395,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                         {row.name}
                       </span>
                       <span className="shrink-0 text-[12px] text-[#9E9E9E]">
-                        {row.kind === "person"
-                          ? row.status
-                          : row.status === "revoked"
-                            ? "agent · revoked"
-                            : "agent"}
+                        {statusLabel(row)}
                       </span>
                     </div>
                     {row.status !== "revoked" && (

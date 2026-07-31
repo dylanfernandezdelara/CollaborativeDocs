@@ -1,6 +1,8 @@
 import { mutation, query } from "./_generated/server";
+import type { MutationCtx } from "./_generated/server";
+import type { Doc, Id } from "./_generated/dataModel";
 import { v } from "convex/values";
-import { resolveSubjectId } from "./lib/owner";
+import { resolveViewerId } from "./lib/owner";
 
 function mintToken(): string {
   return (
@@ -16,6 +18,123 @@ const collaboratorPublicValidator = v.object({
   joined: v.boolean(),
   createdAt: v.number(),
 });
+
+const acceptOutcomeValidator = v.object({
+  outcome: v.union(
+    v.literal("joined"),
+    v.literal("invalid"),
+    v.literal("already_used"),
+    v.literal("doc_mismatch"),
+  ),
+  docId: v.optional(v.id("documents")),
+  collaboratorId: v.optional(v.id("collaborators")),
+});
+
+async function findInviteByToken(
+  ctx: MutationCtx,
+  token: string,
+): Promise<Doc<"collaborators"> | null> {
+  return await ctx.db
+    .query("collaborators")
+    .withIndex("by_token", (q) => q.eq("token", token))
+    .unique();
+}
+
+async function seatsForSubject(
+  ctx: MutationCtx,
+  docId: Id<"documents">,
+  subjectId: string,
+): Promise<Doc<"collaborators">[]> {
+  return await ctx.db
+    .query("collaborators")
+    .withIndex("by_doc_and_subject", (q) =>
+      q.eq("docId", docId).eq("subjectId", subjectId),
+    )
+    .take(20);
+}
+
+async function refreshName(
+  ctx: MutationCtx,
+  id: Id<"collaborators">,
+  currentName: string,
+  displayName: string | undefined,
+) {
+  if (displayName && displayName !== currentName) {
+    await ctx.db.patch("collaborators", id, { name: displayName });
+  }
+}
+
+/** Keep one active seat per (doc, subject); revoke the rest. */
+async function collapseDuplicateSeats(
+  ctx: MutationCtx,
+  docId: Id<"documents">,
+  subjectId: string,
+  preferredId: Id<"collaborators">,
+): Promise<Id<"collaborators">> {
+  const seats = await seatsForSubject(ctx, docId, subjectId);
+  const active = seats.filter((seat) => !seat.revoked);
+  if (active.length <= 1) {
+    return preferredId;
+  }
+
+  const keeper =
+    active.find((seat) => seat._id === preferredId) ??
+    active.sort((a, b) => a.createdAt - b.createdAt)[0]!;
+
+  for (const seat of active) {
+    if (seat._id !== keeper._id) {
+      await ctx.db.patch("collaborators", seat._id, { revoked: true });
+    }
+  }
+  return keeper._id;
+}
+
+async function mergeIntoExistingSeat(
+  ctx: MutationCtx,
+  invite: Doc<"collaborators">,
+  existing: Doc<"collaborators">,
+  displayName: string | undefined,
+): Promise<Id<"collaborators">> {
+  if (existing.revoked) {
+    await ctx.db.patch("collaborators", existing._id, {
+      revoked: false,
+      name: displayName || existing.name,
+      joinedAt: existing.joinedAt ?? Date.now(),
+    });
+  } else {
+    await refreshName(ctx, existing._id, existing.name, displayName);
+  }
+  if (invite._id !== existing._id) {
+    await ctx.db.patch("collaborators", invite._id, { revoked: true });
+  }
+  return existing._id;
+}
+
+async function bindInviteToSubject(
+  ctx: MutationCtx,
+  invite: Doc<"collaborators">,
+  subjectId: string,
+  displayName: string | undefined,
+): Promise<Id<"collaborators">> {
+  const patch: {
+    subjectId: string;
+    joinedAt: number;
+    name?: string;
+  } = {
+    subjectId,
+    joinedAt: Date.now(),
+  };
+  if (displayName) {
+    patch.name = displayName;
+  }
+  await ctx.db.patch("collaborators", invite._id, patch);
+  return await collapseDuplicateSeats(
+    ctx,
+    invite.docId,
+    subjectId,
+    invite._id,
+  );
+}
 
 export const mint = mutation({
   args: {
@@ -60,86 +179,78 @@ export const accept = mutation({
     localOwnerId: v.optional(v.string()),
     displayName: v.optional(v.string()),
   },
-  returns: v.union(
-    v.object({
-      docId: v.id("documents"),
-      collaboratorId: v.id("collaborators"),
-    }),
-    v.null(),
-  ),
+  returns: acceptOutcomeValidator,
   handler: async (ctx, args) => {
-    const invite = await ctx.db
-      .query("collaborators")
-      .withIndex("by_token", (q) => q.eq("token", args.token))
-      .unique();
-
+    const invite = await findInviteByToken(ctx, args.token);
     if (!invite || invite.revoked) {
-      return null;
+      return { outcome: "invalid" as const };
     }
 
     if (invite.docId !== args.docId) {
-      throw new Error("Invite does not match this document");
+      return { outcome: "doc_mismatch" as const };
     }
 
-    const subjectId = await resolveSubjectId(ctx, args.localOwnerId);
+    const subjectId = await resolveViewerId(ctx, args.localOwnerId);
     if (!subjectId) {
       throw new Error("Missing local identity");
     }
 
-    const displayName = args.displayName?.trim();
+    const displayName = args.displayName?.trim() || undefined;
 
-    // Already bound to this subject — idempotent; refresh display name.
     if (invite.subjectId === subjectId) {
-      if (displayName && displayName !== invite.name) {
-        await ctx.db.patch("collaborators", invite._id, { name: displayName });
-      }
-      return { docId: invite.docId, collaboratorId: invite._id };
+      await refreshName(ctx, invite._id, invite.name, displayName);
+      const collaboratorId = await collapseDuplicateSeats(
+        ctx,
+        invite.docId,
+        subjectId,
+        invite._id,
+      );
+      return {
+        outcome: "joined" as const,
+        docId: invite.docId,
+        collaboratorId,
+      };
     }
 
-    // Token already claimed by someone else.
     if (invite.subjectId && invite.subjectId !== subjectId) {
-      throw new Error("Invite already used");
+      return { outcome: "already_used" as const };
     }
 
-    // If this subject already has a seat on the doc, reuse it and retire the
-    // duplicate invite token row.
-    const existing = await ctx.db
-      .query("collaborators")
-      .withIndex("by_doc_and_subject", (q) =>
-        q.eq("docId", invite.docId).eq("subjectId", subjectId),
-      )
-      .unique();
+    const existingSeats = await seatsForSubject(ctx, invite.docId, subjectId);
+    const existing =
+      existingSeats.find((seat) => seat._id !== invite._id) ?? null;
 
-    if (existing && existing._id !== invite._id) {
-      if (existing.revoked) {
-        await ctx.db.patch("collaborators", existing._id, {
-          revoked: false,
-          name: displayName || existing.name,
-          joinedAt: existing.joinedAt ?? Date.now(),
-        });
-      } else if (displayName && displayName !== existing.name) {
-        await ctx.db.patch("collaborators", existing._id, {
-          name: displayName,
-        });
-      }
-      await ctx.db.patch("collaborators", invite._id, { revoked: true });
-      return { docId: existing.docId, collaboratorId: existing._id };
+    if (existing) {
+      const collaboratorId = await mergeIntoExistingSeat(
+        ctx,
+        invite,
+        existing,
+        displayName,
+      );
+      const kept = await collapseDuplicateSeats(
+        ctx,
+        invite.docId,
+        subjectId,
+        collaboratorId,
+      );
+      return {
+        outcome: "joined" as const,
+        docId: invite.docId,
+        collaboratorId: kept,
+      };
     }
 
-    const patch: {
-      subjectId: string;
-      joinedAt: number;
-      name?: string;
-    } = {
+    const collaboratorId = await bindInviteToSubject(
+      ctx,
+      invite,
       subjectId,
-      joinedAt: Date.now(),
+      displayName,
+    );
+    return {
+      outcome: "joined" as const,
+      docId: invite.docId,
+      collaboratorId,
     };
-    if (displayName) {
-      patch.name = displayName;
-    }
-
-    await ctx.db.patch("collaborators", invite._id, patch);
-    return { docId: invite.docId, collaboratorId: invite._id };
   },
 });
 
@@ -175,6 +286,7 @@ export const listForDoc = query({
         _id,
         name,
         revoked,
+        // Revoked-after-join reports joined: false so the UI can show "revoked".
         joined: Boolean(subjectId) && !revoked,
         createdAt,
       }))

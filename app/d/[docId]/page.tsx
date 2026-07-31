@@ -15,6 +15,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { editorExtensions } from "@/lib/editorExtensions";
 import { resolveDisplayName } from "@/lib/displayName";
 import { localOwnerId, useOwnerKey } from "@/lib/ownerKey";
+import { useAcceptCollaboratorInvite } from "@/lib/useAcceptCollaboratorInvite";
 import { useTiptapSync } from "@convex-dev/prosemirror-sync/tiptap";
 import usePresence from "@convex-dev/presence/react";
 import {
@@ -23,9 +24,8 @@ import {
   useCurrentEditor,
 } from "@tiptap/react";
 import type { Editor } from "@tiptap/core";
-import { useMutation, useQuery } from "convex/react";
+import { useQuery } from "convex/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -142,7 +142,6 @@ export default function DocPage({
     ? resolvedSearch.h[0]
     : resolvedSearch.h;
 
-  const router = useRouter();
   const { ownerKey, loaded: ownerLoaded } = useOwnerKey();
   const localId = ownerKey ? localOwnerId(ownerKey) : undefined;
   const user = useQuery(api.users.current);
@@ -161,54 +160,26 @@ export default function DocPage({
   const agents = useQuery(api.agents.listForDoc, { docId });
   const intents = useQuery(api.intents.listActive, { docId });
   const comments = useQuery(api.comments.list, { docId });
-  const acceptInvite = useMutation(api.collaborators.accept);
+
+  useAcceptCollaboratorInvite({
+    docId,
+    inviteToken,
+    localId,
+    ownerLoaded,
+    userSettled: user !== undefined,
+    displayName,
+  });
 
   const [tick, setTick] = useState(() => Date.now());
   const [shareOpen, setShareOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [composeAnchor, setComposeAnchor] = useState<string | null>(null);
-  const inviteHandled = useRef<string | null>(null);
   const editorRef = useRef<Editor | null>(null);
   const highlightExtension = useMemo(
     () => createHighlightExtension(getHighlights),
     [],
   );
-
-  useEffect(() => {
-    if (!inviteToken || !ownerLoaded || !localId) return;
-    if (inviteHandled.current === inviteToken) return;
-    // Wait until auth user query settles so we prefer GitHub display names.
-    if (user === undefined) return;
-    inviteHandled.current = inviteToken;
-
-    void (async () => {
-      try {
-        const result = await acceptInvite({
-          token: inviteToken,
-          docId,
-          localOwnerId: localId,
-          displayName,
-        });
-        // Drop the token only after a resolved attempt (joined or revoked/missing).
-        if (result !== undefined) {
-          router.replace(`/d/${docId}`, { scroll: false });
-        }
-      } catch (error) {
-        console.error("Failed to accept collaborator invite", error);
-        inviteHandled.current = null;
-      }
-    })();
-  }, [
-    acceptInvite,
-    displayName,
-    docId,
-    inviteToken,
-    localId,
-    ownerLoaded,
-    router,
-    user,
-  ]);
 
   const extensions = useMemo(() => {
     if (!sync.extension) return editorExtensions;

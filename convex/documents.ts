@@ -3,11 +3,7 @@ import { mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { prosemirrorSync } from "./prosemirror";
 import { markdownToPmNodes } from "./lib/markdown";
-import {
-  isLocalOwnerId,
-  resolveCreateOwnerId,
-  userOwnerId,
-} from "./lib/owner";
+import { resolveViewerId, viewerSubjectIds } from "./lib/owner";
 import type { Doc } from "./_generated/dataModel";
 
 const SEED_MARKDOWN = `# Product Roadmap
@@ -51,7 +47,7 @@ export const create = mutation({
   },
   returns: v.id("documents"),
   handler: async (ctx, args) => {
-    const ownerId = await resolveCreateOwnerId(ctx, args.localOwnerId);
+    const ownerId = await resolveViewerId(ctx, args.localOwnerId);
     if (!ownerId) {
       throw new Error("Missing local identity");
     }
@@ -79,44 +75,19 @@ export const list = query({
   returns: v.array(documentPublicValidator),
   handler: async (ctx, args) => {
     const byId = new Map<string, Doc<"documents">>();
-
     const userId = await getAuthUserId(ctx);
-    if (userId) {
-      const userDocs = await ctx.db
-        .query("documents")
-        .withIndex("by_owner", (q) => q.eq("ownerId", userOwnerId(userId)))
-        .order("desc")
-        .take(50);
-      for (const doc of userDocs) {
-        byId.set(doc._id, doc);
-      }
-    }
-
-    // Always include cookie-owned docs so GitHub sign-in stays optional and
-    // signing out does not wipe the home list.
-    if (args.localOwnerId && isLocalOwnerId(args.localOwnerId)) {
-      const localDocs = await ctx.db
-        .query("documents")
-        .withIndex("by_owner", (q) => q.eq("ownerId", args.localOwnerId))
-        .order("desc")
-        .take(50);
-      for (const doc of localDocs) {
-        byId.set(doc._id, doc);
-      }
-    }
-
-    // Docs shared via human collaborator invites.
-    // Mirror ownership: include both GitHub and cookie subjects so optional
-    // sign-in does not hide shares accepted while signed out.
-    const subjectIds = new Set<string>();
-    if (userId) {
-      subjectIds.add(userOwnerId(userId));
-    }
-    if (args.localOwnerId && isLocalOwnerId(args.localOwnerId)) {
-      subjectIds.add(args.localOwnerId);
-    }
+    const subjectIds = viewerSubjectIds(userId, args.localOwnerId);
 
     for (const subjectId of subjectIds) {
+      const owned = await ctx.db
+        .query("documents")
+        .withIndex("by_owner", (q) => q.eq("ownerId", subjectId))
+        .order("desc")
+        .take(50);
+      for (const doc of owned) {
+        byId.set(doc._id, doc);
+      }
+
       const seats = await ctx.db
         .query("collaborators")
         .withIndex("by_subject", (q) => q.eq("subjectId", subjectId))
