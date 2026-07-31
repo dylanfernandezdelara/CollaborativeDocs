@@ -15,7 +15,7 @@ export default function RootLayout({
   return (
     <ConvexAuthNextjsServerProvider>
       <html lang="en">
-        <body className="min-h-screen bg-transparent antialiased">
+        <body className="min-h-screen antialiased">
           <ConvexClientProvider>{children}</ConvexClientProvider>
         </body>
       </html>

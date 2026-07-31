@@ -27,17 +27,18 @@ Simple, quiet UI. Prefer whitespace and hierarchy over decoration.
 
 ## Color
 
-Quiet sea-glass tint — cool green-grey, never loud.
+Warm paper palette aligned with [dylanfdl.com](https://www.dylanfdl.com) — cream surfaces, cool grey ink, muted blue primary. No teal/sea-glass.
 
 | Role | Hex |
 | --- | --- |
-| Primary text | `#24302D` |
-| Secondary text | `#51615C` |
-| Tertiary text / muted icons | `#8A9692` |
-| Background | tinted near-white `#EEF4F1` (soft wash OK) |
-| Surface / hover | `#E0EBE6` |
-| Primary action | deep teal `#234039` |
-| Borders | ink at low opacity (`rgba(36,48,45,0.08)`–`0.12`) |
+| Primary text | `#030303` |
+| Secondary text | `#374151` |
+| Tertiary text / muted icons | `#6B7280` |
+| Background | paper `#FFFEF8` (soft warm wash OK) |
+| Surface / elevated | `#FAF8F0` |
+| Surface / hover | `#F5F2E8` |
+| Primary action | muted blue `#5F5FAF` |
+| Borders | paper edge `#F0EDE0`, or ink at low opacity |
 
 Links inherit text color; use weight or underline on hover. Keep accent color sparse — primary buttons and subtle page atmosphere only.
 
@@ -75,6 +76,6 @@ Short and quiet when used (`200–300ms`, ease-out). Prefer opacity/transform ov
 
 ## Do / Don’t
 
-**Do:** quiet sea-glass tint, SF Pro, small type scale, clear title → body → meta hierarchy.
+**Do:** warm paper cream, SF Pro, small type scale, clear title → body → meta hierarchy.
 
-**Don’t:** purple gradients, heavy card stacks, large display fonts, competing accents, decorative badges on media.
+**Don’t:** teal/sea-glass washes, purple gradients, heavy card stacks, large display fonts, competing accents, decorative badges on media.
