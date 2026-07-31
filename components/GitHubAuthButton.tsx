@@ -8,7 +8,9 @@ import { useState } from "react";
 
 export function GitHubAuthButton() {
   const { isLoading, isAuthenticated } = useConvexAuth();
-  const user = useQuery(api.users.current);
+  // Skip until authenticated — `users:current` is absent on older Convex deploys
+  // and a failing useQuery crashes the whole page.
+  const user = useQuery(api.users.current, isAuthenticated ? {} : "skip");
   const { signIn, signOut } = useAuthActions();
   const [pending, setPending] = useState(false);
 

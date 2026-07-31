@@ -52,14 +52,11 @@ export const create = mutation({
   returns: v.id("documents"),
   handler: async (ctx, args) => {
     const ownerId = await resolveCreateOwnerId(ctx, args.localOwnerId);
-    if (!ownerId) {
-      throw new Error("Missing local identity");
-    }
 
     const docId = await ctx.db.insert("documents", {
       title: args.title,
       createdAt: Date.now(),
-      ownerId,
+      ...(ownerId ? { ownerId } : {}),
     });
 
     const seedContent = {
@@ -103,6 +100,13 @@ export const list = query({
       for (const doc of localDocs) {
         byId.set(doc._id, doc);
       }
+    }
+
+    // Legacy fallback: older frontends call `list` with `{}` and expect the
+    // global recent list. Keep that working until owner-scoping is enabled.
+    if (byId.size === 0 && !userId && !args.localOwnerId) {
+      const recent = await ctx.db.query("documents").order("desc").take(50);
+      return recent.map(toPublicDoc);
     }
 
     return [...byId.values()]

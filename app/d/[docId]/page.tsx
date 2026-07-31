@@ -23,7 +23,7 @@ import {
   useCurrentEditor,
 } from "@tiptap/react";
 import type { Editor } from "@tiptap/core";
-import { useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import Link from "next/link";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -136,7 +136,8 @@ export default function DocPage({
   const docId = docIdParam as Id<"documents">;
 
   const { ownerKey, loaded: ownerLoaded } = useOwnerKey();
-  const user = useQuery(api.users.current);
+  const { isAuthenticated } = useConvexAuth();
+  const user = useQuery(api.users.current, isAuthenticated ? {} : "skip");
   const displayName = resolveDisplayName({
     githubName: user?.name ?? null,
     ownerKey,

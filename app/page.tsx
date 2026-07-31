@@ -21,21 +21,26 @@ export default function HomePage() {
   const router = useRouter();
   const { ownerKey, loaded } = useOwnerKey();
   const localId = ownerKey ? localOwnerId(ownerKey) : undefined;
+  // Production Convex may lag the Next deploy. Prefer scoped listing when the
+  // cookie identity is ready; fall back to the unscoped `{}` shape that older
+  // deployments still accept (unknown args are rejected as Server Error).
+  const ownerScoping =
+    process.env.NEXT_PUBLIC_DOCS_OWNER_SCOPING === "1" && !!localId;
   const docs = useQuery(
     api.documents.list,
-    loaded && localId ? { localOwnerId: localId } : "skip",
+    !loaded ? "skip" : ownerScoping ? { localOwnerId: localId } : {},
   );
   const createDoc = useMutation(api.documents.create);
   const [creating, setCreating] = useState(false);
 
   async function handleCreate() {
-    if (!localId) return;
     setCreating(true);
     try {
-      const docId = await createDoc({
-        title: "Product Roadmap",
-        localOwnerId: localId,
-      });
+      const docId = await createDoc(
+        ownerScoping && localId
+          ? { title: "Product Roadmap", localOwnerId: localId }
+          : { title: "Product Roadmap" },
+      );
       router.push(`/d/${docId}`);
     } finally {
       setCreating(false);
@@ -56,7 +61,7 @@ export default function HomePage() {
 
       <Button
         onClick={() => void handleCreate()}
-        disabled={creating || !localId}
+        disabled={creating || !loaded}
         className="mt-8 w-fit rounded-full px-5 text-[13px]"
       >
         {creating ? "Creating…" : "New document"}
