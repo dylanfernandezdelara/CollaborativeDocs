@@ -49,7 +49,7 @@ function SendToAgentButton({
       <Button
         variant="ghost"
         size="sm"
-        className="h-6 px-2 text-[12px] text-[#51615C]"
+        className="h-6 px-2 text-[12px] text-ink-secondary"
         onClick={() => void sendToAgent({ commentId, agentId: agent._id })}
       >
         Send to agent
@@ -64,7 +64,7 @@ function SendToAgentButton({
           <Button
             variant="ghost"
             size="sm"
-            className="h-6 px-2 text-[12px] text-[#51615C]"
+            className="h-6 px-2 text-[12px] text-ink-secondary"
           />
         }
       >
@@ -146,18 +146,18 @@ export function CommentsPanel({
   }
 
   return (
-    <aside className="fixed inset-y-0 right-0 z-40 flex w-[320px] flex-col border-l border-[rgba(36,48,45,0.10)] bg-[#EEF4F1]">
-      <div className="flex h-12 shrink-0 items-center justify-between border-b border-[rgba(36,48,45,0.10)] px-4">
-        <h2 className="text-[14px] font-medium text-[#24302D]">Comments</h2>
+    <aside className="fixed inset-y-0 right-0 z-40 flex w-[320px] flex-col border-l border-ink/10 bg-page">
+      <div className="flex h-12 shrink-0 items-center justify-between border-b border-ink/10 px-4">
+        <h2 className="text-[14px] font-medium text-ink">Comments</h2>
         <Button variant="ghost" size="icon-sm" onClick={onClose}>
-          <XIcon className="size-4 text-[#8A9692]" />
+          <XIcon className="size-4 text-ink-tertiary" />
         </Button>
       </div>
 
       {composeAnchor !== null && (
-        <div className="border-b border-[rgba(36,48,45,0.10)] p-4">
-          <p className="text-[12px] text-[#8A9692]">New comment on</p>
-          <blockquote className="mt-1 border-l-2 border-[rgba(36,48,45,0.10)] pl-2 text-[12px] text-[#51615C]">
+        <div className="border-b border-ink/10 p-4">
+          <p className="text-[12px] text-ink-tertiary">New comment on</p>
+          <blockquote className="mt-1 border-l-2 border-ink/10 pl-2 text-[12px] text-ink-secondary">
             {composeAnchor}
           </blockquote>
           <Textarea
@@ -179,7 +179,7 @@ export function CommentsPanel({
             <Button
               variant="ghost"
               size="sm"
-              className="text-[13px] text-[#51615C]"
+              className="text-[13px] text-ink-secondary"
               onClick={() => {
                 setComposeText("");
                 onClearCompose();
@@ -194,7 +194,7 @@ export function CommentsPanel({
       <ScrollArea className="flex-1">
         <div className="space-y-4 p-4">
           {roots.length === 0 && composeAnchor === null && (
-            <p className="text-[13px] text-[#8A9692]">
+            <p className="text-[13px] text-ink-tertiary">
               Select text in the document to add a comment.
             </p>
           )}
@@ -209,19 +209,19 @@ export function CommentsPanel({
                 }
               >
                 {comment.anchorText && (
-                  <blockquote className="mb-1 border-l-2 border-[rgba(36,48,45,0.10)] pl-2 text-[12px] text-[#8A9692]">
+                  <blockquote className="mb-1 border-l-2 border-ink/10 pl-2 text-[12px] text-ink-tertiary">
                     {comment.anchorText}
                   </blockquote>
                 )}
-                <p className="text-[13px] text-[#24302D]">{comment.text}</p>
-                <p className="mt-0.5 text-[12px] text-[#8A9692]">
+                <p className="text-[13px] text-ink">{comment.text}</p>
+                <p className="mt-0.5 text-[12px] text-ink-tertiary">
                   {comment.authorName}
                 </p>
 
                 {replies.map((reply) => (
-                  <div key={reply._id} className="ml-4 mt-3 border-l border-[rgba(36,48,45,0.08)] pl-3">
-                    <p className="text-[13px] text-[#24302D]">{reply.text}</p>
-                    <p className="mt-0.5 text-[12px] text-[#8A9692]">
+                  <div key={reply._id} className="ml-4 mt-3 border-l border-ink/8 pl-3">
+                    <p className="text-[13px] text-ink">{reply.text}</p>
+                    <p className="mt-0.5 text-[12px] text-ink-tertiary">
                       {reply.authorName}
                     </p>
                   </div>
@@ -244,7 +244,7 @@ export function CommentsPanel({
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-6 px-2 text-[12px] text-[#51615C]"
+                        className="h-6 px-2 text-[12px] text-ink-secondary"
                         disabled={!(replyTexts[comment._id] ?? "").trim()}
                         onClick={() => void submitReply(comment._id)}
                       >

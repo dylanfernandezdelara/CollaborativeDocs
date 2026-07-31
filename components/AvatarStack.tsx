@@ -55,14 +55,14 @@ function PresenceAvatar({
                 className={
                   backgroundColor
                     ? "bg-transparent text-[10px] text-white"
-                    : "text-[10px] text-[#51615C]"
+                    : "text-[10px] text-ink-secondary"
                 }
               >
                 {getInitials(name)}
               </AvatarFallback>
             </Avatar>
             {showDot && (
-              <span className="absolute -right-0.5 -bottom-0.5 size-2 rounded-full border border-[#EEF4F1] bg-[#22c55e]" />
+              <span className="absolute -right-0.5 -bottom-0.5 size-2 rounded-full border border-page bg-[#22c55e]" />
             )}
           </div>
         }

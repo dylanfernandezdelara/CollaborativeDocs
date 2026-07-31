@@ -192,8 +192,8 @@ export default function DocPage({
   if (doc === null) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3">
-        <p className="text-[14px] text-[#51615C]">Document not found.</p>
-        <Link href="/" className="text-[13px] text-[#24302D] underline">
+        <p className="text-[14px] text-ink-secondary">Document not found.</p>
+        <Link href="/" className="text-[13px] text-ink underline">
           Back home
         </Link>
       </div>
@@ -205,15 +205,15 @@ export default function DocPage({
       className="min-h-screen"
       style={{ paddingRight: commentsOpen ? 320 : 0 }}
     >
-      <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-[rgba(36,48,45,0.10)] bg-[#EEF4F1]/90 px-4 backdrop-blur-sm">
+      <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-ink/10 bg-page/90 px-4 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/"
-            className="shrink-0 text-[12px] text-[#8A9692] hover:text-[#51615C]"
+            className="shrink-0 text-[12px] text-ink-tertiary hover:text-ink-secondary"
           >
             CollabDocs
           </Link>
-          <span className="truncate text-[14px] font-medium text-[#24302D]">
+          <span className="truncate text-[14px] font-medium text-ink">
             {doc.title}
           </span>
         </div>
@@ -226,7 +226,7 @@ export default function DocPage({
           <Button
             variant="ghost"
             size="sm"
-            className="text-[13px] text-[#51615C]"
+            className="text-[13px] text-ink-secondary"
             onClick={() => setShareOpen(true)}
           >
             Share
@@ -234,7 +234,7 @@ export default function DocPage({
           <Button
             variant="ghost"
             size="sm"
-            className="text-[13px] text-[#51615C]"
+            className="text-[13px] text-ink-secondary"
             onClick={() => setCommentsOpen((v) => !v)}
           >
             Comments
@@ -242,7 +242,7 @@ export default function DocPage({
           <Button
             variant="ghost"
             size="sm"
-            className="text-[13px] text-[#51615C]"
+            className="text-[13px] text-ink-secondary"
             onClick={() => setHistoryOpen(true)}
           >
             History

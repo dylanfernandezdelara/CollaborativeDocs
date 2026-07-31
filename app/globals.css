@@ -39,6 +39,13 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
+  /* DESIGN.md sea-glass roles — prefer these over arbitrary hex */
+  --color-ink: var(--text-primary);
+  --color-ink-secondary: var(--text-secondary);
+  --color-ink-tertiary: var(--text-tertiary);
+  --color-page: var(--page-bg);
+  --color-page-elevated: var(--page-bg-elevated);
+  --color-surface-hover: var(--surface-hover);
   --radius-sm: calc(var(--radius) * 0.6);
   --radius-md: calc(var(--radius) * 0.8);
   --radius-lg: var(--radius);
@@ -55,8 +62,8 @@
   --card-foreground: oklch(0.28 0.018 175);
   --popover: oklch(0.985 0.004 175);
   --popover-foreground: oklch(0.28 0.018 175);
-  --primary: oklch(0.32 0.035 175);
-  --primary-foreground: oklch(0.985 0.005 175);
+  --primary: #234039;
+  --primary-foreground: #f5f9f7;
   --secondary: oklch(0.955 0.012 175);
   --secondary-foreground: oklch(0.32 0.03 175);
   --muted: oklch(0.955 0.01 175);
@@ -87,7 +94,10 @@
   --text-primary: #24302d;
   --text-secondary: #51615c;
   --text-tertiary: #8a9692;
-  --border-soft: rgba(36, 48, 45, 0.1);
+  --wash-top: color-mix(in srgb, #6e9a91 22%, transparent);
+  --wash-bottom: color-mix(in srgb, #96afa5 12%, transparent);
+  --wash-start: #f2f7f4;
+  --wash-end: #e6efe9;
 }
 
 .dark {
@@ -138,15 +148,20 @@
     background-image:
       radial-gradient(
         ellipse 100% 60% at 50% -20%,
-        rgba(110, 160, 145, 0.22),
+        var(--wash-top),
         transparent 65%
       ),
       radial-gradient(
         ellipse 70% 45% at 100% 100%,
-        rgba(150, 175, 165, 0.12),
+        var(--wash-bottom),
         transparent 55%
       ),
-      linear-gradient(180deg, #f2f7f4 0%, var(--page-bg) 40%, #e6efe9 100%);
+      linear-gradient(
+        180deg,
+        var(--wash-start) 0%,
+        var(--page-bg) 40%,
+        var(--wash-end) 100%
+      );
     background-attachment: fixed;
     color: var(--text-primary);
   }
@@ -164,9 +179,9 @@
 .shimmer-agent {
   background: linear-gradient(
     90deg,
-    rgba(36, 48, 45, 0.04) 0%,
-    rgba(70, 130, 115, 0.12) 50%,
-    rgba(36, 48, 45, 0.04) 100%
+    color-mix(in srgb, var(--text-primary) 4%, transparent) 0%,
+    color-mix(in srgb, var(--primary) 18%, transparent) 50%,
+    color-mix(in srgb, var(--text-primary) 4%, transparent) 100%
   );
   background-size: 200% 100%;
   animation: shimmer 1.6s linear infinite;
@@ -175,7 +190,7 @@
 
 .agent-edit {
   text-decoration: underline;
-  text-decoration-color: rgba(70, 130, 115, 0.55);
+  text-decoration-color: color-mix(in srgb, var(--primary) 55%, transparent);
   text-decoration-thickness: 1.5px;
   text-underline-offset: 3px;
   cursor: help;
@@ -216,7 +231,7 @@
 
 .ProseMirror td,
 .ProseMirror th {
-  border: 1px solid rgba(36, 48, 45, 0.12);
+  border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
   padding: 6px 10px;
   font-size: 13px;
   text-align: left;

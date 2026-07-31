@@ -41,6 +41,8 @@ Quiet sea-glass tint — cool green-grey, never loud.
 
 Links inherit text color; use weight or underline on hover. Keep accent color sparse — primary buttons and subtle page atmosphere only.
 
+**Implementation:** these roles are CSS variables in `app/globals.css` and Tailwind colors `ink`, `ink-secondary`, `ink-tertiary`, `page`, `page-elevated`, `surface-hover`, plus shadcn `primary`. Prefer those utilities over hardcoded hex.
+
 ## Icons
 
 | Context | Size |
@@ -73,6 +75,6 @@ Short and quiet when used (`200–300ms`, ease-out). Prefer opacity/transform ov
 
 ## Do / Don’t
 
-**Do:** muted greys, SF Pro, small type scale, clear title → body → meta hierarchy.
+**Do:** quiet sea-glass tint, SF Pro, small type scale, clear title → body → meta hierarchy.
 
 **Don’t:** purple gradients, heavy card stacks, large display fonts, competing accents, decorative badges on media.
