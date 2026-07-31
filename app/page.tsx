@@ -47,9 +47,6 @@ export default function HomePage() {
       <div className="flex items-start justify-between gap-4">
         <div>
           <h1 className="text-[24px] font-medium text-[#292929]">CollabDocs</h1>
-          <p className="mt-2 text-[14px] text-[#5D5D5D]">
-            A quiet space for humans and agents to write together.
-          </p>
         </div>
         <GitHubAuthButton />
       </div>
