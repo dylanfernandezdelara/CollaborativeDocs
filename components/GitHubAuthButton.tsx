@@ -23,15 +23,15 @@ export function GitHubAuthButton() {
 
   if (isAuthenticated && user) {
     return (
-      <div className="flex items-center gap-3">
-        <span className="text-[12px] text-[#9E9E9E]">
+      <div className="flex max-w-full items-center gap-2 sm:gap-3">
+        <span className="max-w-[120px] truncate text-[12px] text-[#9E9E9E] sm:max-w-[180px]">
           {user.name ?? user.email ?? "Signed in"}
         </span>
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="text-[13px] text-[#5D5D5D]"
+          className="shrink-0 text-[13px] text-[#5D5D5D]"
           disabled={pending}
           onClick={() => {
             setPending(true);
