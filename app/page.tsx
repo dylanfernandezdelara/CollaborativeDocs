@@ -21,9 +21,9 @@ export default function HomePage() {
   const router = useRouter();
   const { ownerKey, loaded } = useOwnerKey();
   const localId = ownerKey ? localOwnerId(ownerKey) : undefined;
-  // Production Convex may lag the Next deploy. Prefer scoped listing when the
-  // cookie identity is ready; fall back to the unscoped `{}` shape that older
-  // deployments still accept (unknown args are rejected as Server Error).
+  // Until production Convex is redeployed (CONVEX_DEPLOY_KEY on Vercel), the
+  // live backend only accepts list({}). Set NEXT_PUBLIC_DOCS_OWNER_SCOPING=1
+  // after that deploy to restore cookie-scoped lists.
   const ownerScoping =
     process.env.NEXT_PUBLIC_DOCS_OWNER_SCOPING === "1" && !!localId;
   const docs = useQuery(
