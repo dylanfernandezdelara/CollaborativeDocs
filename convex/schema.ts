@@ -22,6 +22,21 @@ export default defineSchema({
   })
     .index("by_token", ["token"])
     .index("by_doc", ["docId"]),
+  /** Named human invites — link sharing stays open; this tracks collaborators. */
+  collaborators: defineTable({
+    docId: v.id("documents"),
+    name: v.string(),
+    token: v.string(),
+    revoked: v.boolean(),
+    createdAt: v.number(),
+    /** Bound when the invitee opens the invite link (`local:…` or `user:…`). */
+    subjectId: v.optional(v.string()),
+    joinedAt: v.optional(v.number()),
+  })
+    .index("by_token", ["token"])
+    .index("by_doc", ["docId"])
+    .index("by_subject", ["subjectId"])
+    .index("by_doc_and_subject", ["docId", "subjectId"]),
   intents: defineTable({
     docId: v.id("documents"),
     agentId: v.id("agents"),

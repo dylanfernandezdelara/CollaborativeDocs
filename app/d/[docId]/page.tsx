@@ -14,7 +14,8 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { editorExtensions } from "@/lib/editorExtensions";
 import { resolveDisplayName } from "@/lib/displayName";
-import { useOwnerKey } from "@/lib/ownerKey";
+import { localOwnerId, useOwnerKey } from "@/lib/ownerKey";
+import { useAcceptCollaboratorInvite } from "@/lib/useAcceptCollaboratorInvite";
 import { useTiptapSync } from "@convex-dev/prosemirror-sync/tiptap";
 import usePresence from "@convex-dev/presence/react";
 import {
@@ -162,14 +163,21 @@ function EditorHighlights({
 
 export default function DocPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ docId: string }>;
+  searchParams: Promise<{ h?: string | string[] }>;
 }) {
   const { docId: docIdParam } = use(params);
+  const resolvedSearch = use(searchParams);
   const docId = docIdParam as Id<"documents">;
+  const inviteToken = Array.isArray(resolvedSearch.h)
+    ? resolvedSearch.h[0]
+    : resolvedSearch.h;
 
   const { ownerKey, loaded: ownerLoaded } = useOwnerKey();
-  const { isAuthenticated } = useConvexAuth();
+  const localId = ownerKey ? localOwnerId(ownerKey) : undefined;
+  const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const user = useQuery(api.users.current, isAuthenticated ? {} : "skip");
   const displayName = resolveDisplayName({
     githubName: user?.name ?? null,
@@ -186,6 +194,16 @@ export default function DocPage({
   const agents = useQuery(api.agents.listForDoc, { docId });
   const intents = useQuery(api.intents.listActive, { docId });
   const comments = useQuery(api.comments.list, { docId });
+
+  useAcceptCollaboratorInvite({
+    docId,
+    inviteToken,
+    localId,
+    ownerLoaded,
+    // Skipped auth queries stay undefined — treat signed-out as settled.
+    userSettled: !authLoading && (!isAuthenticated || user !== undefined),
+    displayName,
+  });
 
   const [tick, setTick] = useState(() => Date.now());
   const [shareOpen, setShareOpen] = useState(false);

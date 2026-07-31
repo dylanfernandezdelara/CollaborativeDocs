@@ -9,8 +9,12 @@ export function userOwnerId(userId: string): string {
   return `user:${userId}`;
 }
 
-/** Owner id used when creating a document. */
-export async function resolveCreateOwnerId(
+/**
+ * Preferred identity for the current viewer: signed-in user if present,
+ * otherwise the local cookie id. Used for document ownership and
+ * collaborator membership.
+ */
+export async function resolveViewerId(
   ctx: QueryCtx | MutationCtx,
   localOwnerId: string | undefined,
 ): Promise<string | null> {
@@ -22,4 +26,23 @@ export async function resolveCreateOwnerId(
     return localOwnerId;
   }
   return null;
+}
+
+/**
+ * All subject ids that should count for the current viewer on home lists.
+ * Includes both GitHub and cookie identities so optional sign-in/out does
+ * not hide owned or shared docs.
+ */
+export function viewerSubjectIds(
+  userId: string | null,
+  localOwnerId: string | undefined,
+): string[] {
+  const ids: string[] = [];
+  if (userId) {
+    ids.push(userOwnerId(userId));
+  }
+  if (localOwnerId && isLocalOwnerId(localOwnerId)) {
+    ids.push(localOwnerId);
+  }
+  return ids;
 }
