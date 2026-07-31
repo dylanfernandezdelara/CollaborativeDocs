@@ -1,10 +1,17 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { mutation, query } from "./_generated/server";
+import { mutation, query, type MutationCtx } from "./_generated/server";
 import { v } from "convex/values";
 import { prosemirrorSync } from "./prosemirror";
 import { markdownToPmNodes } from "./lib/markdown";
-import { resolveViewerId, viewerSubjectIds } from "./lib/owner";
+import {
+  isLocalOwnerId,
+  resolveViewerId,
+  userOwnerId,
+  viewerSubjectIds,
+} from "./lib/owner";
 import type { Doc } from "./_generated/dataModel";
+
+const CLAIM_BATCH_SIZE = 100;
 
 const SEED_MARKDOWN = `# Product Roadmap
 
@@ -37,6 +44,49 @@ function toPublicDoc(doc: Doc<"documents">) {
     _creationTime: doc._creationTime,
     title: doc.title,
     createdAt: doc.createdAt,
+  };
+}
+
+async function claimLocalIdentity(
+  ctx: MutationCtx,
+  localOwnerId: string,
+) {
+  if (!isLocalOwnerId(localOwnerId)) {
+    throw new Error("Invalid local identity");
+  }
+
+  const userId = await getAuthUserId(ctx);
+  if (!userId) {
+    throw new Error("Sign in to sync documents");
+  }
+  const ownerId = userOwnerId(userId);
+
+  const [documents, collaborations] = await Promise.all([
+    ctx.db
+      .query("documents")
+      .withIndex("by_owner", (q) => q.eq("ownerId", localOwnerId))
+      .take(CLAIM_BATCH_SIZE),
+    ctx.db
+      .query("collaborators")
+      .withIndex("by_subject", (q) => q.eq("subjectId", localOwnerId))
+      .take(CLAIM_BATCH_SIZE),
+  ]);
+
+  for (const document of documents) {
+    await ctx.db.patch("documents", document._id, { ownerId });
+  }
+  for (const collaboration of collaborations) {
+    await ctx.db.patch("collaborators", collaboration._id, {
+      subjectId: ownerId,
+    });
+  }
+
+  return {
+    claimedDocuments: documents.length,
+    claimedCollaborations: collaborations.length,
+    done:
+      documents.length < CLAIM_BATCH_SIZE &&
+      collaborations.length < CLAIM_BATCH_SIZE,
   };
 }
 
@@ -105,6 +155,20 @@ export const list = query({
       .sort((a, b) => b.createdAt - a.createdAt)
       .slice(0, 50)
       .map(toPublicDoc);
+  },
+});
+
+export const claim = mutation({
+  args: {
+    localOwnerId: v.string(),
+  },
+  returns: v.object({
+    claimedDocuments: v.number(),
+    claimedCollaborations: v.number(),
+    done: v.boolean(),
+  }),
+  handler: async (ctx, args) => {
+    return await claimLocalIdentity(ctx, args.localOwnerId);
   },
 });
 

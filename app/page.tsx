@@ -1,6 +1,7 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { AuthNav } from "@/components/AuthControls";
 import { api } from "@/convex/_generated/api";
 import { localOwnerId, useOwnerKey } from "@/lib/ownerKey";
 import { useMutation, useQuery } from "convex/react";
@@ -42,16 +43,30 @@ export default function HomePage() {
   }
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col px-4 py-12 sm:py-24">
-      <h1 className="text-[24px] font-medium text-ink">CollabDocs</h1>
-
-      <Button
-        onClick={() => void handleCreate()}
-        disabled={creating || !loaded || !localId}
-        className="mt-8 w-fit rounded-full px-5 text-[13px]"
+    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col px-4 py-8 sm:py-12">
+      <nav
+        aria-label="Primary navigation"
+        className="flex min-h-8 items-center justify-between gap-4"
       >
-        {creating ? "Creating…" : "New document"}
-      </Button>
+        <span className="text-[14px] font-medium text-ink">CollabDocs</span>
+        <AuthNav localOwnerId={localId} />
+      </nav>
+
+      <section className="mt-16 sm:mt-24">
+        <h1 className="text-[24px] font-medium text-ink">Your documents</h1>
+        <p className="mt-3 max-w-[480px] text-[14px] leading-6 text-ink-secondary">
+          Documents save automatically and stay linked to this device. Sign in
+          to sync them across browsers and devices.
+        </p>
+
+        <Button
+          onClick={() => void handleCreate()}
+          disabled={creating || !loaded || !localId}
+          className="mt-8 w-fit rounded-full px-5 text-[13px]"
+        >
+          {creating ? "Creating…" : "New document"}
+        </Button>
+      </section>
 
       <section className="mt-10 sm:mt-12">
         <h2 className="text-[13px] font-medium text-ink-secondary">Documents</h2>
