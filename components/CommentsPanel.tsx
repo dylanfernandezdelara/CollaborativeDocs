@@ -12,7 +12,7 @@ import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
 import { XIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 type Agent = {
   _id: Id<"agents">;
@@ -107,6 +107,31 @@ export function CommentsPanel({
   const [composeText, setComposeText] = useState("");
   const [replyTexts, setReplyTexts] = useState<Record<string, string>>({});
 
+  // Below md the panel covers the whole viewport, so lock body scroll while
+  // it is open. On md+ it is a side rail and the page should keep scrolling.
+  useEffect(() => {
+    if (!open) return;
+    const mql = window.matchMedia("(max-width: 767px)");
+    const apply = () => {
+      document.body.style.overflow = mql.matches ? "hidden" : "";
+    };
+    apply();
+    mql.addEventListener("change", apply);
+    return () => {
+      mql.removeEventListener("change", apply);
+      document.body.style.overflow = "";
+    };
+  }, [open]);
+
+  useEffect(() => {
+    if (!open) return;
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [open, onClose]);
+
   if (!open) return null;
 
   const roots = (comments ?? []).filter((c) => !c.parentId);
@@ -146,7 +171,11 @@ export function CommentsPanel({
   }
 
   return (
-    <aside className="fixed inset-0 z-50 flex flex-col bg-[#FAFAFA] md:inset-y-0 md:left-auto md:right-0 md:z-40 md:w-[320px] md:border-l md:border-[rgba(0,0,0,0.10)]">
+    <aside
+      role="dialog"
+      aria-label="Comments"
+      className="fixed inset-0 z-50 flex flex-col bg-[#FAFAFA] md:inset-y-0 md:left-auto md:right-0 md:z-40 md:w-[320px] md:border-l md:border-[rgba(0,0,0,0.10)]"
+    >
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-[rgba(0,0,0,0.10)] px-4">
         <h2 className="text-[14px] font-medium text-[#292929]">Comments</h2>
         <Button variant="ghost" size="icon-sm" onClick={onClose} aria-label="Close comments">
@@ -165,7 +194,7 @@ export function CommentsPanel({
             value={composeText}
             onChange={(e) => setComposeText(e.target.value)}
             placeholder="Write a comment…"
-            className="mt-2 min-h-16 text-base sm:text-[13px]"
+            className="mt-2 min-h-16 text-[16px] sm:text-[13px]"
           />
           <div className="mt-2 flex flex-wrap gap-2">
             <Button
@@ -238,7 +267,7 @@ export function CommentsPanel({
                         }))
                       }
                       placeholder="Reply…"
-                      className="min-h-12 text-base sm:text-[13px]"
+                      className="min-h-12 text-[16px] sm:text-[13px]"
                     />
                     <div className="flex flex-wrap items-center gap-1">
                       <Button

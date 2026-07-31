@@ -29,17 +29,18 @@ import Link from "next/link";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-const COMMENT_BTN_WIDTH = 88;
-const COMMENT_BTN_HEIGHT = 32;
+// Fallbacks for the first paint, before the pill can be measured.
+const COMMENT_BTN_FALLBACK_WIDTH = 88;
+const COMMENT_BTN_FALLBACK_HEIGHT = 32;
 const COMMENT_BTN_MARGIN = 8;
 
 function clampCommentButtonPosition(
   top: number,
   left: number,
+  size: { width: number; height: number },
 ): { top: number; left: number } {
-  if (typeof window === "undefined") return { top, left };
-  const maxLeft = window.innerWidth - COMMENT_BTN_WIDTH - COMMENT_BTN_MARGIN;
-  const maxTop = window.innerHeight - COMMENT_BTN_HEIGHT - COMMENT_BTN_MARGIN;
+  const maxLeft = window.innerWidth - size.width - COMMENT_BTN_MARGIN;
+  const maxTop = window.innerHeight - size.height - COMMENT_BTN_MARGIN;
   return {
     top: Math.min(Math.max(COMMENT_BTN_MARGIN, top), Math.max(COMMENT_BTN_MARGIN, maxTop)),
     left: Math.min(Math.max(COMMENT_BTN_MARGIN, left), Math.max(COMMENT_BTN_MARGIN, maxLeft)),
@@ -48,10 +49,13 @@ function clampCommentButtonPosition(
 
 function SelectionCommentButton({
   onComment,
+  hideOnMobile,
 }: {
   onComment: (anchorText: string) => void;
+  hideOnMobile: boolean;
 }) {
   const { editor } = useCurrentEditor();
+  const buttonRef = useRef<HTMLButtonElement | null>(null);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(
     null,
   );
@@ -73,9 +77,13 @@ function SelectionCommentButton({
         return;
       }
 
+      const rect = buttonRef.current?.getBoundingClientRect();
       const coords = editor.view.coordsAtPos(to);
       setPosition(
-        clampCommentButtonPosition(coords.bottom + 6, coords.left),
+        clampCommentButtonPosition(coords.bottom + 6, coords.left, {
+          width: rect?.width || COMMENT_BTN_FALLBACK_WIDTH,
+          height: rect?.height || COMMENT_BTN_FALLBACK_HEIGHT,
+        }),
       );
       setAnchorText(text);
     };
@@ -93,8 +101,11 @@ function SelectionCommentButton({
 
   return createPortal(
     <Button
+      ref={buttonRef}
       size="sm"
-      className="fixed z-50 rounded-full text-[12px] shadow-sm"
+      className={`fixed z-40 rounded-full text-[12px] shadow-sm ${
+        hideOnMobile ? "hidden md:inline-flex" : ""
+      }`}
       style={{ top: position.top, left: position.left }}
       onMouseDown={(e) => e.preventDefault()}
       onClick={() => onComment(anchorText)}
@@ -209,6 +220,22 @@ export default function DocPage({
     setCommentsOpen(true);
   }
 
+  const headerActions: Array<{
+    label: string;
+    icon: typeof ShareIcon;
+    onClick: () => void;
+    pressed?: boolean;
+  }> = [
+    { label: "Share", icon: ShareIcon, onClick: () => setShareOpen(true) },
+    {
+      label: "Comments",
+      icon: MessageSquareIcon,
+      onClick: () => setCommentsOpen((v) => !v),
+      pressed: commentsOpen,
+    },
+    { label: "History", icon: HistoryIcon, onClick: () => setHistoryOpen(true) },
+  ];
+
   if (doc === undefined) return null;
 
   if (doc === null) {
@@ -242,64 +269,26 @@ export default function DocPage({
         </div>
 
         <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
-          <div className="mr-0.5 hidden min-[400px]:block sm:mr-1">
+          <div className="mr-0.5 sm:mr-1">
             <AvatarStack
               humans={presenceState ?? []}
               agents={onlineAgents}
             />
           </div>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="text-[#5D5D5D] md:hidden"
-            aria-label="Share"
-            onClick={() => setShareOpen(true)}
-          >
-            <ShareIcon className="size-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hidden text-[13px] text-[#5D5D5D] md:inline-flex"
-            onClick={() => setShareOpen(true)}
-          >
-            Share
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="text-[#5D5D5D] md:hidden"
-            aria-label="Comments"
-            aria-pressed={commentsOpen}
-            onClick={() => setCommentsOpen((v) => !v)}
-          >
-            <MessageSquareIcon className="size-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hidden text-[13px] text-[#5D5D5D] md:inline-flex"
-            onClick={() => setCommentsOpen((v) => !v)}
-          >
-            Comments
-          </Button>
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            className="text-[#5D5D5D] md:hidden"
-            aria-label="History"
-            onClick={() => setHistoryOpen(true)}
-          >
-            <HistoryIcon className="size-3.5" />
-          </Button>
-          <Button
-            variant="ghost"
-            size="sm"
-            className="hidden text-[13px] text-[#5D5D5D] md:inline-flex"
-            onClick={() => setHistoryOpen(true)}
-          >
-            History
-          </Button>
+          {headerActions.map(({ label, icon: Icon, onClick, pressed }) => (
+            <Button
+              key={label}
+              variant="ghost"
+              size="sm"
+              className="w-7 px-0 text-[#5D5D5D] md:w-auto md:px-2.5"
+              aria-label={label}
+              aria-pressed={pressed}
+              onClick={onClick}
+            >
+              <Icon className="size-3.5 md:hidden" />
+              <span className="hidden text-[13px] md:inline">{label}</span>
+            </Button>
+          ))}
         </div>
       </header>
 
@@ -319,7 +308,10 @@ export default function DocPage({
             }}
           >
             <EditorContent editor={null} />
-            <SelectionCommentButton onComment={handleStartComment} />
+            <SelectionCommentButton
+              onComment={handleStartComment}
+              hideOnMobile={commentsOpen}
+            />
             <EditorHighlights intents={intents} comments={comments} />
           </EditorProvider>
         ) : null}
