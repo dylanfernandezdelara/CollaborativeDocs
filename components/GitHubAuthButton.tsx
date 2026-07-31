@@ -15,7 +15,7 @@ export function GitHubAuthButton() {
   // Optional control only — never gate the home page on auth.
   if (isLoading) {
     return (
-      <span className="text-[12px] text-[#9E9E9E]" aria-hidden>
+      <span className="text-[12px] text-[#8A9692]" aria-hidden>
         &nbsp;
       </span>
     );
@@ -24,14 +24,14 @@ export function GitHubAuthButton() {
   if (isAuthenticated && user) {
     return (
       <div className="flex items-center gap-3">
-        <span className="text-[12px] text-[#9E9E9E]">
+        <span className="text-[12px] text-[#8A9692]">
           {user.name ?? user.email ?? "Signed in"}
         </span>
         <Button
           type="button"
           variant="ghost"
           size="sm"
-          className="text-[13px] text-[#5D5D5D]"
+          className="text-[13px] text-[#51615C]"
           disabled={pending}
           onClick={() => {
             setPending(true);
@@ -49,7 +49,7 @@ export function GitHubAuthButton() {
       type="button"
       variant="ghost"
       size="sm"
-      className="text-[13px] text-[#9E9E9E]"
+      className="text-[13px] text-[#8A9692]"
       disabled={pending}
       onClick={() => {
         setPending(true);

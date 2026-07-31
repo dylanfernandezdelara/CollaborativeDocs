@@ -191,9 +191,9 @@ export default function DocPage({
 
   if (doc === null) {
     return (
-      <div className="flex min-h-screen flex-col items-center justify-center gap-3 bg-[#FAFAFA]">
-        <p className="text-[14px] text-[#5D5D5D]">Document not found.</p>
-        <Link href="/" className="text-[13px] text-[#292929] underline">
+      <div className="flex min-h-screen flex-col items-center justify-center gap-3">
+        <p className="text-[14px] text-[#51615C]">Document not found.</p>
+        <Link href="/" className="text-[13px] text-[#24302D] underline">
           Back home
         </Link>
       </div>
@@ -202,18 +202,18 @@ export default function DocPage({
 
   return (
     <div
-      className="min-h-screen bg-[#FAFAFA]"
+      className="min-h-screen"
       style={{ paddingRight: commentsOpen ? 320 : 0 }}
     >
-      <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-[rgba(0,0,0,0.10)] bg-[#FAFAFA]/95 px-4 backdrop-blur-sm">
+      <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-[rgba(36,48,45,0.10)] bg-[#F3F6F5]/90 px-4 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/"
-            className="shrink-0 text-[12px] text-[#9E9E9E] hover:text-[#5D5D5D]"
+            className="shrink-0 text-[12px] text-[#8A9692] hover:text-[#51615C]"
           >
             CollabDocs
           </Link>
-          <span className="truncate text-[14px] font-medium text-[#292929]">
+          <span className="truncate text-[14px] font-medium text-[#24302D]">
             {doc.title}
           </span>
         </div>
@@ -226,7 +226,7 @@ export default function DocPage({
           <Button
             variant="ghost"
             size="sm"
-            className="text-[13px] text-[#5D5D5D]"
+            className="text-[13px] text-[#51615C]"
             onClick={() => setShareOpen(true)}
           >
             Share
@@ -234,7 +234,7 @@ export default function DocPage({
           <Button
             variant="ghost"
             size="sm"
-            className="text-[13px] text-[#5D5D5D]"
+            className="text-[13px] text-[#51615C]"
             onClick={() => setCommentsOpen((v) => !v)}
           >
             Comments
@@ -242,7 +242,7 @@ export default function DocPage({
           <Button
             variant="ghost"
             size="sm"
-            className="text-[13px] text-[#5D5D5D]"
+            className="text-[13px] text-[#51615C]"
             onClick={() => setHistoryOpen(true)}
           >
             History

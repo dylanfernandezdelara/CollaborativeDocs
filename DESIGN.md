@@ -27,15 +27,19 @@ Simple, quiet UI. Prefer whitespace and hierarchy over decoration.
 
 ## Color
 
+Quiet sea-glass tint — cool green-grey, never loud.
+
 | Role | Hex |
 | --- | --- |
-| Primary text | `#292929` |
-| Secondary text | `#5D5D5D` |
-| Tertiary text / muted icons | `#9E9E9E` |
-| Background | near-white (`#FAFAFA`–`#FDFDFC`) |
-| Borders | soft black at low opacity (`rgba(0,0,0,0.08)`–`0.12`) |
+| Primary text | `#24302D` |
+| Secondary text | `#51615C` |
+| Tertiary text / muted icons | `#8A9692` |
+| Background | tinted near-white `#F3F6F5` (soft wash OK) |
+| Surface / hover | `#E9EFED` |
+| Primary action | deep teal `#234039` |
+| Borders | ink at low opacity (`rgba(36,48,45,0.08)`–`0.12`) |
 
-Links inherit text color; use weight or underline on hover rather than loud accent colors. Accents sparingly, if at all.
+Links inherit text color; use weight or underline on hover. Keep accent color sparse — primary buttons and subtle page atmosphere only.
 
 ## Icons
 

@@ -91,16 +91,16 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md border-[rgba(0,0,0,0.10)] sm:max-w-md">
+      <DialogContent className="max-w-md border-[rgba(36,48,45,0.10)] sm:max-w-md">
         <DialogHeader>
-          <DialogTitle className="text-[14px] font-medium text-[#292929]">
+          <DialogTitle className="text-[14px] font-medium text-[#24302D]">
             Share
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex flex-col gap-4">
           <section>
-            <h3 className="text-[13px] font-medium text-[#292929]">
+            <h3 className="text-[13px] font-medium text-[#24302D]">
               Invite an agent
             </h3>
             <div className="mt-2 flex w-full min-w-0 gap-2">
@@ -122,18 +122,18 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
             {minted && (
               <div className="mt-3 space-y-3">
                 <div>
-                  <p className="mb-1 text-[12px] text-[#9E9E9E]">
+                  <p className="mb-1 text-[12px] text-[#8A9692]">
                     Start {minted.name} — paste in a terminal
                   </p>
                   <button
                     type="button"
                     onClick={() => void copyText(curlCommand, "curl")}
-                    className="group flex w-full cursor-pointer items-center gap-3 rounded-lg border border-[rgba(0,0,0,0.10)] bg-[#FAFAFA] p-3 text-left transition-colors hover:border-[rgba(0,0,0,0.20)] hover:bg-[#F2F2F1]"
+                    className="group flex w-full cursor-pointer items-center gap-3 rounded-lg border border-[rgba(36,48,45,0.10)] bg-[#F3F6F5] p-3 text-left transition-colors hover:border-[rgba(36,48,45,0.20)] hover:bg-[#E9EFED]"
                   >
-                    <code className="min-w-0 flex-1 break-all text-[12px] leading-relaxed text-[#5D5D5D]">
+                    <code className="min-w-0 flex-1 break-all text-[12px] leading-relaxed text-[#51615C]">
                       {curlCommand}
                     </code>
-                    <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-[rgba(0,0,0,0.10)] bg-white text-[#5D5D5D] group-hover:text-[#292929]">
+                    <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-[rgba(36,48,45,0.10)] bg-white text-[#51615C] group-hover:text-[#24302D]">
                       {copied === "curl" ? (
                         <Check className="size-4" />
                       ) : (
@@ -142,7 +142,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                     </span>
                   </button>
                   {copied === "curl" && (
-                    <p className="mt-1 text-[12px] text-[#9E9E9E]">
+                    <p className="mt-1 text-[12px] text-[#8A9692]">
                       Copied to clipboard
                     </p>
                   )}
@@ -152,7 +152,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                   <button
                     type="button"
                     onClick={() => setManualOpen(!manualOpen)}
-                    className="flex items-center gap-1 text-[12px] text-[#5D5D5D] hover:text-[#292929]"
+                    className="flex items-center gap-1 text-[12px] text-[#51615C] hover:text-[#24302D]"
                   >
                     {manualOpen ? (
                       <ChevronDown className="size-3.5" />
@@ -165,12 +165,12 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                     <button
                       type="button"
                       onClick={() => void copyText(mcpJson, "json")}
-                      className="group mt-2 flex w-full cursor-pointer items-start gap-3 rounded-lg border border-[rgba(0,0,0,0.10)] bg-[#FAFAFA] p-3 text-left transition-colors hover:border-[rgba(0,0,0,0.20)] hover:bg-[#F2F2F1]"
+                      className="group mt-2 flex w-full cursor-pointer items-start gap-3 rounded-lg border border-[rgba(36,48,45,0.10)] bg-[#F3F6F5] p-3 text-left transition-colors hover:border-[rgba(36,48,45,0.20)] hover:bg-[#E9EFED]"
                     >
-                      <pre className="min-w-0 flex-1 whitespace-pre-wrap break-all text-[12px] leading-relaxed text-[#5D5D5D]">
+                      <pre className="min-w-0 flex-1 whitespace-pre-wrap break-all text-[12px] leading-relaxed text-[#51615C]">
                         {mcpJson}
                       </pre>
-                      <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-[rgba(0,0,0,0.10)] bg-white text-[#5D5D5D] group-hover:text-[#292929]">
+                      <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-[rgba(36,48,45,0.10)] bg-white text-[#51615C] group-hover:text-[#24302D]">
                         {copied === "json" ? (
                           <Check className="size-4" />
                         ) : (
@@ -185,13 +185,13 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
           </section>
 
           <section>
-            <h3 className="text-[13px] font-medium text-[#292929]">
+            <h3 className="text-[13px] font-medium text-[#24302D]">
               Agents on this doc
             </h3>
             {!agents?.length ? (
-              <p className="mt-2 text-[12px] text-[#9E9E9E]">No agents yet.</p>
+              <p className="mt-2 text-[12px] text-[#8A9692]">No agents yet.</p>
             ) : (
-              <ul className="mt-2 divide-y divide-[rgba(0,0,0,0.08)]">
+              <ul className="mt-2 divide-y divide-[rgba(36,48,45,0.08)]">
                 {agents.map((agent) => (
                   <li
                     key={agent._id}
@@ -202,11 +202,11 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                         className="size-2 rounded-full"
                         style={{ backgroundColor: agent.color }}
                       />
-                      <span className="text-[13px] text-[#292929]">
+                      <span className="text-[13px] text-[#24302D]">
                         {agent.name}
                       </span>
                       {agent.revoked && (
-                        <span className="text-[12px] text-[#9E9E9E]">
+                        <span className="text-[12px] text-[#8A9692]">
                           revoked
                         </span>
                       )}
@@ -215,7 +215,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-[12px] text-[#5D5D5D]"
+                        className="text-[12px] text-[#51615C]"
                         onClick={() => void revoke({ agentId: agent._id })}
                       >
                         Revoke

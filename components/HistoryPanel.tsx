@@ -47,28 +47,28 @@ export function HistoryPanel({ docId, open, onOpenChange }: HistoryPanelProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-[320px] border-[rgba(0,0,0,0.10)] bg-[#FAFAFA] sm:max-w-[320px]"
+        className="w-[320px] border-[rgba(36,48,45,0.10)] bg-[#F3F6F5] sm:max-w-[320px]"
       >
         <SheetHeader>
-          <SheetTitle className="text-[14px] font-medium text-[#292929]">
+          <SheetTitle className="text-[14px] font-medium text-[#24302D]">
             History
           </SheetTitle>
         </SheetHeader>
 
         <div className="flex-1 overflow-y-auto px-4 pb-4">
           {!edits?.length ? (
-            <p className="text-[13px] text-[#9E9E9E]">No agent edits yet.</p>
+            <p className="text-[13px] text-[#8A9692]">No agent edits yet.</p>
           ) : (
             <ul className="space-y-4">
               {edits.map((edit) => (
                 <li key={edit._id}>
-                  <p className="text-[13px] text-[#292929]">
+                  <p className="text-[13px] text-[#24302D]">
                     {edit.agentName} — {edit.task}
                   </p>
-                  <p className="mt-0.5 text-[12px] text-[#9E9E9E]">
+                  <p className="mt-0.5 text-[12px] text-[#8A9692]">
                     {edit.summary}
                   </p>
-                  <p className="mt-1 text-[12px] text-[#9E9E9E]">
+                  <p className="mt-1 text-[12px] text-[#8A9692]">
                     {formatRelativeTime(edit.createdAt, now)}
                   </p>
                 </li>
@@ -76,7 +76,7 @@ export function HistoryPanel({ docId, open, onOpenChange }: HistoryPanelProps) {
             </ul>
           )}
 
-          <p className="mt-8 text-[12px] text-[#9E9E9E]">
+          <p className="mt-8 text-[12px] text-[#8A9692]">
             Human edits are tracked in the document itself.
           </p>
         </div>

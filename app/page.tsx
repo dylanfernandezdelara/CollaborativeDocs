@@ -46,7 +46,7 @@ export default function HomePage() {
     <main className="mx-auto flex min-h-screen max-w-[640px] flex-col px-4 py-24">
       <div className="flex items-start justify-between gap-4">
         <div>
-          <h1 className="text-[24px] font-medium text-[#292929]">CollabDocs</h1>
+          <h1 className="text-[24px] font-medium text-[#24302D]">CollabDocs</h1>
         </div>
         <GitHubAuthButton />
       </div>
@@ -60,21 +60,21 @@ export default function HomePage() {
       </Button>
 
       <section className="mt-12">
-        <h2 className="text-[13px] font-medium text-[#5D5D5D]">Documents</h2>
+        <h2 className="text-[13px] font-medium text-[#51615C]">Documents</h2>
         {!loaded || docs === undefined ? (
-          <p className="mt-3 text-[13px] text-[#9E9E9E]">Loading…</p>
+          <p className="mt-3 text-[13px] text-[#8A9692]">Loading…</p>
         ) : docs.length === 0 ? (
-          <p className="mt-3 text-[13px] text-[#9E9E9E]">No documents yet.</p>
+          <p className="mt-3 text-[13px] text-[#8A9692]">No documents yet.</p>
         ) : (
-          <ul className="mt-3 divide-y divide-[rgba(0,0,0,0.08)]">
+          <ul className="mt-3 divide-y divide-[rgba(36,48,45,0.08)]">
             {docs.map((doc) => (
               <li key={doc._id}>
                 <Link
                   href={`/d/${doc._id}`}
                   className="flex items-baseline justify-between py-3 hover:opacity-80"
                 >
-                  <span className="text-[14px] text-[#292929]">{doc.title}</span>
-                  <span className="text-[13px] text-[#9E9E9E]">
+                  <span className="text-[14px] text-[#24302D]">{doc.title}</span>
+                  <span className="text-[13px] text-[#8A9692]">
                     {formatDate(doc.createdAt)}
                   </span>
                 </Link>
