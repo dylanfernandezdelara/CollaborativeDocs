@@ -53,31 +53,15 @@ async function seatsForSubject(
     .take(20);
 }
 
-/** Auto guest labels must not overwrite the inviter-chosen seat name. */
-function isPlaceholderGuestName(name: string): boolean {
-  return /^Guest(?: [a-z0-9]{4})?$/i.test(name.trim());
-}
-
-function preferredCollaboratorName(
-  currentName: string,
-  displayName: string | undefined,
-): string | undefined {
-  const next = displayName?.trim();
-  if (!next || next === currentName || isPlaceholderGuestName(next)) {
-    return undefined;
-  }
-  return next;
-}
-
 async function refreshName(
   ctx: MutationCtx,
   id: Id<"collaborators">,
   currentName: string,
   displayName: string | undefined,
 ) {
-  const next = preferredCollaboratorName(currentName, displayName);
-  if (next) {
-    await ctx.db.patch("collaborators", id, { name: next });
+  // Callers must omit auto guest labels; only real profile names overwrite.
+  if (displayName && displayName !== currentName) {
+    await ctx.db.patch("collaborators", id, { name: displayName });
   }
 }
 
@@ -113,11 +97,10 @@ async function mergeIntoExistingSeat(
   displayName: string | undefined,
 ): Promise<Id<"collaborators">> {
   if (existing.revoked) {
-    const nextName =
-      preferredCollaboratorName(existing.name, displayName) ?? existing.name;
     await ctx.db.patch("collaborators", existing._id, {
       revoked: false,
-      name: nextName,
+      // Prefer profile name, else this invite's chosen label, else prior seat.
+      name: displayName || invite.name || existing.name,
       joinedAt: existing.joinedAt ?? Date.now(),
     });
   } else {
@@ -143,9 +126,8 @@ async function bindInviteToSubject(
     subjectId,
     joinedAt: Date.now(),
   };
-  const nextName = preferredCollaboratorName(invite.name, displayName);
-  if (nextName) {
-    patch.name = nextName;
+  if (displayName) {
+    patch.name = displayName;
   }
   await ctx.db.patch("collaborators", invite._id, patch);
   return await collapseDuplicateSeats(

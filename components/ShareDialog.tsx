@@ -18,7 +18,7 @@ import {
 } from "@/lib/agentInvite";
 import { buildHumanInviteUrl } from "@/lib/humanInvite";
 import { Check, ChevronDown, ChevronRight, Copy } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type ShareDialogProps = {
   docId: Id<"documents">;
@@ -147,6 +147,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
   const [manualOpen, setManualOpen] = useState(false);
   const [copied, setCopied] = useState<"doc" | "invite" | "json" | null>(null);
   const [creating, setCreating] = useState(false);
+  const creatingRef = useRef(false);
   const accessLoading = open && (people === undefined || agents === undefined);
 
   const origin =
@@ -169,18 +170,19 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
       setMinted(null);
       setManualOpen(false);
       setCopied(null);
+      creatingRef.current = false;
       setCreating(false);
     }
     onOpenChange(nextOpen);
   }
 
   function handleKindChange(next: InviteKind) {
+    if (creatingRef.current) return;
     setInviteKind(next);
     setName(defaultNameFor(next, agents?.length ?? 0));
     setMinted(null);
     setManualOpen(false);
     setCopied(null);
-    setCreating(false);
   }
 
   const inviteSlug =
@@ -244,8 +246,9 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
 
   async function handleCreateInvite() {
     const trimmed = name.trim();
-    if (!trimmed || creating) return;
+    if (!trimmed || creatingRef.current) return;
 
+    creatingRef.current = true;
     setCreating(true);
     try {
       if (inviteKind === "person") {
@@ -267,6 +270,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
         name: trimmed,
       });
     } finally {
+      creatingRef.current = false;
       setCreating(false);
     }
   }

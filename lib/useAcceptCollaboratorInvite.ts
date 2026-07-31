@@ -16,7 +16,11 @@ type Options = {
    * When auth is skipped (signed out), this should be true immediately.
    */
   userSettled: boolean;
-  displayName: string;
+  /**
+   * Authenticated profile name only. Omit auto guest labels so accept keeps
+   * the inviter-chosen seat name.
+   */
+  profileName?: string;
 };
 
 /**
@@ -29,7 +33,7 @@ export function useAcceptCollaboratorInvite({
   localId,
   ownerLoaded,
   userSettled,
-  displayName,
+  profileName,
 }: Options) {
   const router = useRouter();
   const acceptInvite = useMutation(api.collaborators.accept);
@@ -46,7 +50,7 @@ export function useAcceptCollaboratorInvite({
           token: inviteToken,
           docId,
           localOwnerId: localId,
-          displayName,
+          displayName: profileName,
         });
       } catch (error) {
         // Only retry on unexpected failures (e.g. missing identity / network).
@@ -60,7 +64,7 @@ export function useAcceptCollaboratorInvite({
     })();
   }, [
     acceptInvite,
-    displayName,
+    profileName,
     docId,
     inviteToken,
     localId,

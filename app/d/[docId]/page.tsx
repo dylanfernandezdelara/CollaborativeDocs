@@ -202,7 +202,8 @@ export default function DocPage({
     ownerLoaded,
     // Skipped auth queries stay undefined — treat signed-out as settled.
     userSettled: !authLoading && (!isAuthenticated || user !== undefined),
-    displayName,
+    // Guest labels are for presence/comments only — never overwrite seat names.
+    profileName: user?.name?.trim() || undefined,
   });
 
   const [tick, setTick] = useState(() => Date.now());
