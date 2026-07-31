@@ -29,8 +29,8 @@ export function AuthNav({ localOwnerId }: { localOwnerId?: string }) {
 
   const syncCurrentDevice = useCallback(async () => {
     if (!localOwnerId) return;
-    setSyncFailed(false);
     await claim({ localOwnerId });
+    setSyncFailed(false);
   }, [claim, localOwnerId]);
 
   useEffect(() => {
