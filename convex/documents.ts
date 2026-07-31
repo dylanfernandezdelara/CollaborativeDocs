@@ -1,10 +1,16 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
-import { mutation, query, type MutationCtx } from "./_generated/server";
+import {
+  internalMutation,
+  mutation,
+  query,
+  type MutationCtx,
+} from "./_generated/server";
+import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { prosemirrorSync } from "./prosemirror";
 import { markdownToPmNodes } from "./lib/markdown";
 import {
-  isLocalOwnerId,
+  isClaimableLocalOwnerId,
   resolveViewerId,
   userOwnerId,
   viewerSubjectIds,
@@ -49,36 +55,28 @@ function toPublicDoc(doc: Doc<"documents">) {
 
 async function claimLocalIdentity(
   ctx: MutationCtx,
-  localOwnerId: string,
+  claim: Doc<"identityClaims">,
 ) {
-  if (!isLocalOwnerId(localOwnerId)) {
-    throw new Error("Invalid local identity");
-  }
-
-  const userId = await getAuthUserId(ctx);
-  if (!userId) {
-    throw new Error("Sign in to sync documents");
-  }
-  const ownerId = userOwnerId(userId);
-
   const [documents, collaborations] = await Promise.all([
     ctx.db
       .query("documents")
-      .withIndex("by_owner", (q) => q.eq("ownerId", localOwnerId))
+      .withIndex("by_owner", (q) => q.eq("ownerId", claim.localOwnerId))
       .take(CLAIM_BATCH_SIZE),
     ctx.db
       .query("collaborators")
-      .withIndex("by_subject", (q) => q.eq("subjectId", localOwnerId))
+      .withIndex("by_subject", (q) =>
+        q.eq("subjectId", claim.localOwnerId),
+      )
       .take(CLAIM_BATCH_SIZE),
   ]);
 
   for (const document of documents) {
-    await ctx.db.patch("documents", document._id, { ownerId });
+    await ctx.db.patch("documents", document._id, {
+      ownerId: claim.userOwnerId,
+    });
   }
   for (const collaboration of collaborations) {
-    await ctx.db.patch("collaborators", collaboration._id, {
-      subjectId: ownerId,
-    });
+    await migrateCollaboratorSeat(ctx, collaboration, claim.userOwnerId);
   }
 
   return {
@@ -88,6 +86,97 @@ async function claimLocalIdentity(
       documents.length < CLAIM_BATCH_SIZE &&
       collaborations.length < CLAIM_BATCH_SIZE,
   };
+}
+
+async function migrateCollaboratorSeat(
+  ctx: MutationCtx,
+  localSeat: Doc<"collaborators">,
+  userSubjectId: string,
+) {
+  const userSeats = await ctx.db
+    .query("collaborators")
+    .withIndex("by_doc_and_subject", (q) =>
+      q.eq("docId", localSeat.docId).eq("subjectId", userSubjectId),
+    )
+    .take(20);
+
+  if (userSeats.length === 0) {
+    await ctx.db.patch("collaborators", localSeat._id, {
+      subjectId: userSubjectId,
+    });
+    return;
+  }
+
+  const keeper =
+    userSeats.find((seat) => !seat.revoked) ??
+    userSeats.sort((a, b) => a.createdAt - b.createdAt)[0]!;
+
+  if (!localSeat.revoked) {
+    await ctx.db.patch("collaborators", keeper._id, {
+      name: localSeat.name,
+      revoked: false,
+      joinedAt: keeper.joinedAt ?? localSeat.joinedAt ?? Date.now(),
+    });
+  }
+  for (const seat of userSeats) {
+    if (seat._id !== keeper._id && !seat.revoked) {
+      await ctx.db.patch("collaborators", seat._id, { revoked: true });
+    }
+  }
+  await ctx.db.delete("collaborators", localSeat._id);
+}
+
+async function getOrCreateIdentityClaim(
+  ctx: MutationCtx,
+  localOwnerId: string,
+  accountOwnerId: string,
+): Promise<Doc<"identityClaims">> {
+  const existing = await ctx.db
+    .query("identityClaims")
+    .withIndex("by_local_owner", (q) => q.eq("localOwnerId", localOwnerId))
+    .unique();
+  if (existing) {
+    if (existing.userOwnerId !== accountOwnerId) {
+      throw new Error("This device is already synced to another account");
+    }
+    return existing;
+  }
+
+  const claimId = await ctx.db.insert("identityClaims", {
+    localOwnerId,
+    userOwnerId: accountOwnerId,
+    createdAt: Date.now(),
+  });
+  const claim = await ctx.db.get("identityClaims", claimId);
+  if (!claim) {
+    throw new Error("Failed to start document sync");
+  }
+  return claim;
+}
+
+async function continueIdentityClaim(
+  ctx: MutationCtx,
+  claim: Doc<"identityClaims">,
+) {
+  if (claim.completedAt) {
+    return {
+      claimedDocuments: 0,
+      claimedCollaborations: 0,
+      done: true,
+    };
+  }
+
+  const result = await claimLocalIdentity(ctx, claim);
+  if (result.done) {
+    await ctx.db.patch("identityClaims", claim._id, {
+      completedAt: Date.now(),
+    });
+  } else {
+    await ctx.scheduler.runAfter(0, internal.documents.continueClaim, {
+      claimId: claim._id,
+    });
+  }
+  return result;
 }
 
 export const create = mutation({
@@ -168,7 +257,35 @@ export const claim = mutation({
     done: v.boolean(),
   }),
   handler: async (ctx, args) => {
-    return await claimLocalIdentity(ctx, args.localOwnerId);
+    if (!isClaimableLocalOwnerId(args.localOwnerId)) {
+      throw new Error("Invalid local identity");
+    }
+    const userId = await getAuthUserId(ctx);
+    if (!userId) {
+      throw new Error("Sign in to sync documents");
+    }
+
+    const identityClaim = await getOrCreateIdentityClaim(
+      ctx,
+      args.localOwnerId,
+      userOwnerId(userId),
+    );
+    return await continueIdentityClaim(ctx, identityClaim);
+  },
+});
+
+export const continueClaim = internalMutation({
+  args: {
+    claimId: v.id("identityClaims"),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const identityClaim = await ctx.db.get("identityClaims", args.claimId);
+    if (!identityClaim) {
+      return null;
+    }
+    await continueIdentityClaim(ctx, identityClaim);
+    return null;
   },
 });
 

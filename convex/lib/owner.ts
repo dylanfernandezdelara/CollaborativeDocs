@@ -5,6 +5,16 @@ export function isLocalOwnerId(ownerId: string): boolean {
   return ownerId.startsWith("local:") && ownerId.length > "local:".length;
 }
 
+export function isClaimableLocalOwnerId(ownerId: string): boolean {
+  if (!isLocalOwnerId(ownerId)) return false;
+  const key = ownerId.slice("local:".length);
+  return (
+    key.length >= 20 &&
+    key.length <= 200 &&
+    /^[A-Za-z0-9_-]+$/.test(key)
+  );
+}
+
 export function userOwnerId(userId: string): string {
   return `user:${userId}`;
 }
