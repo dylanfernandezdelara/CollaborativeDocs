@@ -31,11 +31,12 @@ export function AuthNav({ localOwnerId }: { localOwnerId?: string }) {
 
     rememberAuthProvider("github");
     if (!localOwnerId) return;
+    const identityToClaim = localOwnerId;
 
     async function claimAll() {
       let done = false;
       while (!done) {
-        const result = await claim({ localOwnerId });
+        const result = await claim({ localOwnerId: identityToClaim });
         done = result.done;
       }
     }
