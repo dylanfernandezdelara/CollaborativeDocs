@@ -1,6 +1,5 @@
 "use client";
 
-import { GitHubAuthButton } from "@/components/GitHubAuthButton";
 import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import { localOwnerId, useOwnerKey } from "@/lib/ownerKey";
@@ -44,14 +43,7 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-[640px] flex-col px-4 py-12 sm:py-24">
-      <div className="flex flex-wrap items-start justify-between gap-x-4 gap-y-3">
-        <div className="min-w-0 flex-1">
-          <h1 className="text-[24px] font-medium text-ink">CollabDocs</h1>
-        </div>
-        <div className="shrink-0">
-          <GitHubAuthButton />
-        </div>
-      </div>
+      <h1 className="text-[24px] font-medium text-ink">CollabDocs</h1>
 
       <Button
         onClick={() => void handleCreate()}
