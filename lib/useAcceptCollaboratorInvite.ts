@@ -2,7 +2,6 @@
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
-import { humanCollaboratorsEnabled } from "@/lib/featureFlags";
 import { useMutation } from "convex/react";
 import { useRouter } from "next/navigation";
 import { useEffect, useRef } from "react";
@@ -40,12 +39,6 @@ export function useAcceptCollaboratorInvite({
     if (!inviteToken || !ownerLoaded || !localId || !userSettled) return;
     if (handled.current === inviteToken) return;
     handled.current = inviteToken;
-
-    // Backend may not have collaborators:* yet — strip the token and skip.
-    if (!humanCollaboratorsEnabled()) {
-      router.replace(`/d/${docId}`, { scroll: false });
-      return;
-    }
 
     void (async () => {
       try {

@@ -16,7 +16,6 @@ import {
   agentMcpServerId,
   buildJoinCurlCommand,
 } from "@/lib/agentInvite";
-import { humanCollaboratorsEnabled } from "@/lib/featureFlags";
 import { buildHumanInviteUrl } from "@/lib/humanInvite";
 import { Check, ChevronDown, ChevronRight, Copy } from "lucide-react";
 import { useState } from "react";
@@ -132,24 +131,18 @@ function statusLabel(row: AccessRow): string {
 }
 
 export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
-  const humanCollab = humanCollaboratorsEnabled();
   const agents = useQuery(api.agents.listForDoc, open ? { docId } : "skip");
-  // Skip until production Convex ships collaborators:* (see featureFlags).
   const people = useQuery(
     api.collaborators.listForDoc,
-    humanCollab && open ? { docId } : "skip",
+    open ? { docId } : "skip",
   );
   const mintAgent = useMutation(api.agents.mint);
   const revokeAgent = useMutation(api.agents.revoke);
   const mintHuman = useMutation(api.collaborators.mint);
   const revokeHuman = useMutation(api.collaborators.revoke);
 
-  const [inviteKind, setInviteKind] = useState<InviteKind>(
-    humanCollab ? "person" : "agent",
-  );
-  const [name, setName] = useState(
-    humanCollab ? "Collaborator" : "Agent A",
-  );
+  const [inviteKind, setInviteKind] = useState<InviteKind>("person");
+  const [name, setName] = useState("Collaborator");
   const [minted, setMinted] = useState<MintedInvite | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
   const [copied, setCopied] = useState<"doc" | "invite" | "json" | null>(null);
@@ -169,9 +162,8 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
 
   function handleOpenChange(nextOpen: boolean) {
     if (nextOpen) {
-      const kind: InviteKind = humanCollab ? "person" : "agent";
-      setInviteKind(kind);
-      setName(defaultNameFor(kind, agents?.length ?? 0));
+      setInviteKind("person");
+      setName(defaultNameFor("person", agents?.length ?? 0));
       setMinted(null);
       setManualOpen(false);
       setCopied(null);
@@ -180,7 +172,6 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
   }
 
   function handleKindChange(next: InviteKind) {
-    if (next === "person" && !humanCollab) return;
     setInviteKind(next);
     setName(defaultNameFor(next, agents?.length ?? 0));
     setMinted(null);
@@ -252,7 +243,6 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
     if (!trimmed) return;
 
     if (inviteKind === "person") {
-      if (!humanCollab) return;
       const result = await mintHuman({ docId, name: trimmed });
       setMinted({
         kind: "person",
@@ -307,14 +297,10 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
           <section>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-[13px] font-medium text-ink">Invite</h3>
-              {humanCollab ? (
-                <SegmentedControl
-                  value={inviteKind}
-                  onChange={handleKindChange}
-                />
-              ) : (
-                <span className="text-[12px] text-ink-tertiary">Agent</span>
-              )}
+              <SegmentedControl
+                value={inviteKind}
+                onChange={handleKindChange}
+              />
             </div>
 
             <div className="mt-2 flex w-full min-w-0 flex-col gap-2 sm:flex-row">
@@ -326,9 +312,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
               />
               <Button
                 onClick={() => void handleCreateInvite()}
-                disabled={
-                  !name.trim() || (inviteKind === "person" && !humanCollab)
-                }
+                disabled={!name.trim()}
                 className="w-full shrink-0 rounded-full text-[13px] sm:w-auto"
                 size="sm"
               >
