@@ -110,7 +110,7 @@ export function GitHubSignInButton() {
         <span>{pending ? "Redirecting…" : "Continue with GitHub"}</span>
       </Button>
       {lastProvider === "github" ? (
-        <span className="pointer-events-none absolute top-0 right-1 z-10 rounded-full border border-ink/15 bg-page-elevated px-2 py-0.5 text-[12px] font-normal text-ink-tertiary">
+        <span className="pointer-events-none absolute top-0 right-3 z-10 rounded-full border border-ink/15 bg-page-elevated px-2 py-0.5 text-[12px] font-normal text-ink-tertiary">
           Last Used
         </span>
       ) : null}
