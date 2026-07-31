@@ -14,7 +14,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { editorExtensions } from "@/lib/editorExtensions";
 import { resolveDisplayName } from "@/lib/displayName";
-import { useOwnerKey } from "@/lib/ownerKey";
+import { localOwnerId, useOwnerKey } from "@/lib/ownerKey";
 import { useTiptapSync } from "@convex-dev/prosemirror-sync/tiptap";
 import usePresence from "@convex-dev/presence/react";
 import {
@@ -23,8 +23,9 @@ import {
   useCurrentEditor,
 } from "@tiptap/react";
 import type { Editor } from "@tiptap/core";
-import { useQuery } from "convex/react";
+import { useMutation, useQuery } from "convex/react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -129,13 +130,21 @@ function EditorHighlights({
 
 export default function DocPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ docId: string }>;
+  searchParams: Promise<{ h?: string | string[] }>;
 }) {
   const { docId: docIdParam } = use(params);
+  const resolvedSearch = use(searchParams);
   const docId = docIdParam as Id<"documents">;
+  const inviteToken = Array.isArray(resolvedSearch.h)
+    ? resolvedSearch.h[0]
+    : resolvedSearch.h;
 
+  const router = useRouter();
   const { ownerKey, loaded: ownerLoaded } = useOwnerKey();
+  const localId = ownerKey ? localOwnerId(ownerKey) : undefined;
   const user = useQuery(api.users.current);
   const displayName = resolveDisplayName({
     githubName: user?.name ?? null,
@@ -152,17 +161,48 @@ export default function DocPage({
   const agents = useQuery(api.agents.listForDoc, { docId });
   const intents = useQuery(api.intents.listActive, { docId });
   const comments = useQuery(api.comments.list, { docId });
+  const acceptInvite = useMutation(api.collaborators.accept);
 
   const [tick, setTick] = useState(() => Date.now());
   const [shareOpen, setShareOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [composeAnchor, setComposeAnchor] = useState<string | null>(null);
+  const inviteHandled = useRef<string | null>(null);
   const editorRef = useRef<Editor | null>(null);
   const highlightExtension = useMemo(
     () => createHighlightExtension(getHighlights),
     [],
   );
+
+  useEffect(() => {
+    if (!inviteToken || !ownerLoaded || !localId) return;
+    if (inviteHandled.current === inviteToken) return;
+    inviteHandled.current = inviteToken;
+
+    void (async () => {
+      try {
+        await acceptInvite({
+          token: inviteToken,
+          localOwnerId: localId,
+          displayName,
+        });
+      } catch (error) {
+        console.error("Failed to accept collaborator invite", error);
+      } finally {
+        // Drop the token from the URL so refresh does not re-claim.
+        router.replace(`/d/${docId}`, { scroll: false });
+      }
+    })();
+  }, [
+    acceptInvite,
+    displayName,
+    docId,
+    inviteToken,
+    localId,
+    ownerLoaded,
+    router,
+  ]);
 
   const extensions = useMemo(() => {
     if (!sync.extension) return editorExtensions;

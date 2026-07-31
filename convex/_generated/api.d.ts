@@ -11,6 +11,7 @@
 import type * as agentDoc from "../agentDoc.js";
 import type * as agents from "../agents.js";
 import type * as auth from "../auth.js";
+import type * as collaborators from "../collaborators.js";
 import type * as comments from "../comments.js";
 import type * as documents from "../documents.js";
 import type * as edits from "../edits.js";
@@ -34,6 +35,7 @@ declare const fullApi: ApiFromModules<{
   agentDoc: typeof agentDoc;
   agents: typeof agents;
   auth: typeof auth;
+  collaborators: typeof collaborators;
   comments: typeof comments;
   documents: typeof documents;
   edits: typeof edits;

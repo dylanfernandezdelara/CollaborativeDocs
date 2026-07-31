@@ -23,3 +23,14 @@ export async function resolveCreateOwnerId(
   }
   return null;
 }
+
+/**
+ * Subject id for the current viewer: prefer signed-in user, else local cookie.
+ * Used for collaborator membership (not document ownership).
+ */
+export async function resolveSubjectId(
+  ctx: QueryCtx | MutationCtx,
+  localOwnerId: string | undefined,
+): Promise<string | null> {
+  return await resolveCreateOwnerId(ctx, localOwnerId);
+}

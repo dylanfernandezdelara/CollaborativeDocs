@@ -6,6 +6,7 @@ import { markdownToPmNodes } from "./lib/markdown";
 import {
   isLocalOwnerId,
   resolveCreateOwnerId,
+  resolveSubjectId,
   userOwnerId,
 } from "./lib/owner";
 import type { Doc } from "./_generated/dataModel";
@@ -102,6 +103,22 @@ export const list = query({
         .take(50);
       for (const doc of localDocs) {
         byId.set(doc._id, doc);
+      }
+    }
+
+    // Docs shared via human collaborator invites.
+    const subjectId = await resolveSubjectId(ctx, args.localOwnerId);
+    if (subjectId) {
+      const seats = await ctx.db
+        .query("collaborators")
+        .withIndex("by_subject", (q) => q.eq("subjectId", subjectId))
+        .take(100);
+      for (const seat of seats) {
+        if (seat.revoked || byId.has(seat.docId)) continue;
+        const doc = await ctx.db.get("documents", seat.docId);
+        if (doc) {
+          byId.set(doc._id, doc);
+        }
       }
     }
 
