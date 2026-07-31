@@ -53,14 +53,31 @@ async function seatsForSubject(
     .take(20);
 }
 
+/** Auto guest labels must not overwrite the inviter-chosen seat name. */
+function isPlaceholderGuestName(name: string): boolean {
+  return /^Guest(?: [a-z0-9]{4})?$/i.test(name.trim());
+}
+
+function preferredCollaboratorName(
+  currentName: string,
+  displayName: string | undefined,
+): string | undefined {
+  const next = displayName?.trim();
+  if (!next || next === currentName || isPlaceholderGuestName(next)) {
+    return undefined;
+  }
+  return next;
+}
+
 async function refreshName(
   ctx: MutationCtx,
   id: Id<"collaborators">,
   currentName: string,
   displayName: string | undefined,
 ) {
-  if (displayName && displayName !== currentName) {
-    await ctx.db.patch("collaborators", id, { name: displayName });
+  const next = preferredCollaboratorName(currentName, displayName);
+  if (next) {
+    await ctx.db.patch("collaborators", id, { name: next });
   }
 }
 
@@ -96,9 +113,11 @@ async function mergeIntoExistingSeat(
   displayName: string | undefined,
 ): Promise<Id<"collaborators">> {
   if (existing.revoked) {
+    const nextName =
+      preferredCollaboratorName(existing.name, displayName) ?? existing.name;
     await ctx.db.patch("collaborators", existing._id, {
       revoked: false,
-      name: displayName || existing.name,
+      name: nextName,
       joinedAt: existing.joinedAt ?? Date.now(),
     });
   } else {
@@ -124,8 +143,9 @@ async function bindInviteToSubject(
     subjectId,
     joinedAt: Date.now(),
   };
-  if (displayName) {
-    patch.name = displayName;
+  const nextName = preferredCollaboratorName(invite.name, displayName);
+  if (nextName) {
+    patch.name = nextName;
   }
   await ctx.db.patch("collaborators", invite._id, patch);
   return await collapseDuplicateSeats(
