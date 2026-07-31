@@ -205,7 +205,7 @@ export default function DocPage({
       className="min-h-screen"
       style={{ paddingRight: commentsOpen ? 320 : 0 }}
     >
-      <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-[rgba(36,48,45,0.10)] bg-[#F3F6F5]/90 px-4 backdrop-blur-sm">
+      <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-[rgba(36,48,45,0.10)] bg-[#EEF4F1]/90 px-4 backdrop-blur-sm">
         <div className="flex min-w-0 items-center gap-3">
           <Link
             href="/"

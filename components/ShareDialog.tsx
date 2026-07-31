@@ -128,7 +128,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                   <button
                     type="button"
                     onClick={() => void copyText(curlCommand, "curl")}
-                    className="group flex w-full cursor-pointer items-center gap-3 rounded-lg border border-[rgba(36,48,45,0.10)] bg-[#F3F6F5] p-3 text-left transition-colors hover:border-[rgba(36,48,45,0.20)] hover:bg-[#E9EFED]"
+                    className="group flex w-full cursor-pointer items-center gap-3 rounded-lg border border-[rgba(36,48,45,0.10)] bg-[#EEF4F1] p-3 text-left transition-colors hover:border-[rgba(36,48,45,0.20)] hover:bg-[#E0EBE6]"
                   >
                     <code className="min-w-0 flex-1 break-all text-[12px] leading-relaxed text-[#51615C]">
                       {curlCommand}
@@ -165,7 +165,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                     <button
                       type="button"
                       onClick={() => void copyText(mcpJson, "json")}
-                      className="group mt-2 flex w-full cursor-pointer items-start gap-3 rounded-lg border border-[rgba(36,48,45,0.10)] bg-[#F3F6F5] p-3 text-left transition-colors hover:border-[rgba(36,48,45,0.20)] hover:bg-[#E9EFED]"
+                      className="group mt-2 flex w-full cursor-pointer items-start gap-3 rounded-lg border border-[rgba(36,48,45,0.10)] bg-[#EEF4F1] p-3 text-left transition-colors hover:border-[rgba(36,48,45,0.20)] hover:bg-[#E0EBE6]"
                     >
                       <pre className="min-w-0 flex-1 whitespace-pre-wrap break-all text-[12px] leading-relaxed text-[#51615C]">
                         {mcpJson}

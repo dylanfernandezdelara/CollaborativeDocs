@@ -34,8 +34,8 @@ Quiet sea-glass tint — cool green-grey, never loud.
 | Primary text | `#24302D` |
 | Secondary text | `#51615C` |
 | Tertiary text / muted icons | `#8A9692` |
-| Background | tinted near-white `#F3F6F5` (soft wash OK) |
-| Surface / hover | `#E9EFED` |
+| Background | tinted near-white `#EEF4F1` (soft wash OK) |
+| Surface / hover | `#E0EBE6` |
 | Primary action | deep teal `#234039` |
 | Borders | ink at low opacity (`rgba(36,48,45,0.08)`–`0.12`) |
 

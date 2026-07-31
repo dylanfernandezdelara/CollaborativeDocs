@@ -81,9 +81,9 @@
   --sidebar-accent-foreground: oklch(0.32 0.03 175);
   --sidebar-border: oklch(0.90 0.012 175);
   --sidebar-ring: oklch(0.55 0.035 175);
-  --page-bg: #f3f6f5;
-  --page-bg-elevated: #f8faf9;
-  --surface-hover: #e9efed;
+  --page-bg: #eef4f1;
+  --page-bg-elevated: #f5f9f7;
+  --surface-hover: #e0ebe6;
   --text-primary: #24302d;
   --text-secondary: #51615c;
   --text-tertiary: #8a9692;
@@ -137,11 +137,16 @@
     background-color: var(--page-bg);
     background-image:
       radial-gradient(
-        ellipse 90% 55% at 50% -25%,
-        rgba(120, 158, 148, 0.14),
-        transparent 70%
+        ellipse 100% 60% at 50% -20%,
+        rgba(110, 160, 145, 0.22),
+        transparent 65%
       ),
-      linear-gradient(180deg, #f5f8f7 0%, var(--page-bg) 45%, #eef3f1 100%);
+      radial-gradient(
+        ellipse 70% 45% at 100% 100%,
+        rgba(150, 175, 165, 0.12),
+        transparent 55%
+      ),
+      linear-gradient(180deg, #f2f7f4 0%, var(--page-bg) 40%, #e6efe9 100%);
     background-attachment: fixed;
     color: var(--text-primary);
   }

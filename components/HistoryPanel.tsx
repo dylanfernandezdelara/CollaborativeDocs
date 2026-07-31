@@ -47,7 +47,7 @@ export function HistoryPanel({ docId, open, onOpenChange }: HistoryPanelProps) {
     <Sheet open={open} onOpenChange={onOpenChange}>
       <SheetContent
         side="right"
-        className="w-[320px] border-[rgba(36,48,45,0.10)] bg-[#F3F6F5] sm:max-w-[320px]"
+        className="w-[320px] border-[rgba(36,48,45,0.10)] bg-[#EEF4F1] sm:max-w-[320px]"
       >
         <SheetHeader>
           <SheetTitle className="text-[14px] font-medium text-[#24302D]">

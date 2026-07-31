@@ -62,7 +62,7 @@ function PresenceAvatar({
               </AvatarFallback>
             </Avatar>
             {showDot && (
-              <span className="absolute -right-0.5 -bottom-0.5 size-2 rounded-full border border-[#F3F6F5] bg-[#22c55e]" />
+              <span className="absolute -right-0.5 -bottom-0.5 size-2 rounded-full border border-[#EEF4F1] bg-[#22c55e]" />
             )}
           </div>
         }

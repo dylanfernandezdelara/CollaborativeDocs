@@ -146,7 +146,7 @@ export function CommentsPanel({
   }
 
   return (
-    <aside className="fixed inset-y-0 right-0 z-40 flex w-[320px] flex-col border-l border-[rgba(36,48,45,0.10)] bg-[#F3F6F5]">
+    <aside className="fixed inset-y-0 right-0 z-40 flex w-[320px] flex-col border-l border-[rgba(36,48,45,0.10)] bg-[#EEF4F1]">
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-[rgba(36,48,45,0.10)] px-4">
         <h2 className="text-[14px] font-medium text-[#24302D]">Comments</h2>
         <Button variant="ghost" size="icon-sm" onClick={onClose}>
