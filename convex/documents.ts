@@ -6,7 +6,6 @@ import { markdownToPmNodes } from "./lib/markdown";
 import {
   isLocalOwnerId,
   resolveCreateOwnerId,
-  resolveSubjectId,
   userOwnerId,
 } from "./lib/owner";
 import type { Doc } from "./_generated/dataModel";
@@ -107,8 +106,17 @@ export const list = query({
     }
 
     // Docs shared via human collaborator invites.
-    const subjectId = await resolveSubjectId(ctx, args.localOwnerId);
-    if (subjectId) {
+    // Mirror ownership: include both GitHub and cookie subjects so optional
+    // sign-in does not hide shares accepted while signed out.
+    const subjectIds = new Set<string>();
+    if (userId) {
+      subjectIds.add(userOwnerId(userId));
+    }
+    if (args.localOwnerId && isLocalOwnerId(args.localOwnerId)) {
+      subjectIds.add(args.localOwnerId);
+    }
+
+    for (const subjectId of subjectIds) {
       const seats = await ctx.db
         .query("collaborators")
         .withIndex("by_subject", (q) => q.eq("subjectId", subjectId))

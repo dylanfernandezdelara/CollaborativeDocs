@@ -178,20 +178,25 @@ export default function DocPage({
   useEffect(() => {
     if (!inviteToken || !ownerLoaded || !localId) return;
     if (inviteHandled.current === inviteToken) return;
+    // Wait until auth user query settles so we prefer GitHub display names.
+    if (user === undefined) return;
     inviteHandled.current = inviteToken;
 
     void (async () => {
       try {
-        await acceptInvite({
+        const result = await acceptInvite({
           token: inviteToken,
+          docId,
           localOwnerId: localId,
           displayName,
         });
+        // Drop the token only after a resolved attempt (joined or revoked/missing).
+        if (result !== undefined) {
+          router.replace(`/d/${docId}`, { scroll: false });
+        }
       } catch (error) {
         console.error("Failed to accept collaborator invite", error);
-      } finally {
-        // Drop the token from the URL so refresh does not re-claim.
-        router.replace(`/d/${docId}`, { scroll: false });
+        inviteHandled.current = null;
       }
     })();
   }, [
@@ -202,6 +207,7 @@ export default function DocPage({
     localId,
     ownerLoaded,
     router,
+    user,
   ]);
 
   const extensions = useMemo(() => {

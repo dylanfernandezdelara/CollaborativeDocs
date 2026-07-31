@@ -56,6 +56,7 @@ export const mint = mutation({
 export const accept = mutation({
   args: {
     token: v.string(),
+    docId: v.id("documents"),
     localOwnerId: v.optional(v.string()),
     displayName: v.optional(v.string()),
   },
@@ -76,13 +77,22 @@ export const accept = mutation({
       return null;
     }
 
+    if (invite.docId !== args.docId) {
+      throw new Error("Invite does not match this document");
+    }
+
     const subjectId = await resolveSubjectId(ctx, args.localOwnerId);
     if (!subjectId) {
       throw new Error("Missing local identity");
     }
 
-    // Already bound to this subject — idempotent.
+    const displayName = args.displayName?.trim();
+
+    // Already bound to this subject — idempotent; refresh display name.
     if (invite.subjectId === subjectId) {
+      if (displayName && displayName !== invite.name) {
+        await ctx.db.patch("collaborators", invite._id, { name: displayName });
+      }
       return { docId: invite.docId, collaboratorId: invite._id };
     }
 
@@ -104,8 +114,12 @@ export const accept = mutation({
       if (existing.revoked) {
         await ctx.db.patch("collaborators", existing._id, {
           revoked: false,
-          name: args.displayName?.trim() || existing.name,
+          name: displayName || existing.name,
           joinedAt: existing.joinedAt ?? Date.now(),
+        });
+      } else if (displayName && displayName !== existing.name) {
+        await ctx.db.patch("collaborators", existing._id, {
+          name: displayName,
         });
       }
       await ctx.db.patch("collaborators", invite._id, { revoked: true });
@@ -120,7 +134,6 @@ export const accept = mutation({
       subjectId,
       joinedAt: Date.now(),
     };
-    const displayName = args.displayName?.trim();
     if (displayName) {
       patch.name = displayName;
     }
