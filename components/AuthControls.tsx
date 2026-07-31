@@ -92,9 +92,9 @@ export function GitHubSignInButton() {
   return (
     <Button
       type="button"
-      variant="outline"
+      variant="default"
       size="lg"
-      className="w-full justify-start rounded-lg px-3 text-[14px]"
+      className="relative h-10 w-full justify-center rounded-lg px-3 text-[14px]"
       disabled={isLoading || pending}
       onClick={() => {
         setPending(true);
@@ -108,8 +108,8 @@ export function GitHubSignInButton() {
       </span>
       <span>{pending ? "Redirecting…" : "Continue with GitHub"}</span>
       {lastProvider === "github" ? (
-        <span className="ml-auto rounded-full border border-ink/10 bg-page-elevated px-2 py-0.5 text-[12px] font-normal text-ink-tertiary">
-          Last used
+        <span className="absolute right-3 rounded-full border border-primary-foreground/20 bg-primary-foreground/10 px-2 py-0.5 text-[12px] font-normal text-primary-foreground/80">
+          Last Used
         </span>
       ) : null}
     </Button>
