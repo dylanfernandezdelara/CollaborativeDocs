@@ -91,7 +91,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="max-w-md border-[rgba(0,0,0,0.10)] sm:max-w-md">
+      <DialogContent className="max-h-[min(90dvh,40rem)] max-w-md overflow-y-auto border-[rgba(0,0,0,0.10)] sm:max-w-md">
         <DialogHeader>
           <DialogTitle className="text-[14px] font-medium text-[#292929]">
             Share
@@ -103,16 +103,16 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
             <h3 className="text-[13px] font-medium text-[#292929]">
               Invite an agent
             </h3>
-            <div className="mt-2 flex w-full min-w-0 gap-2">
+            <div className="mt-2 flex w-full min-w-0 flex-col gap-2 sm:flex-row">
               <Input
                 value={agentName}
                 onChange={(e) => setAgentName(e.target.value)}
-                className="h-8 min-w-0 flex-1 text-[13px]"
+                className="h-8 min-w-0 flex-1 text-base sm:text-[13px]"
               />
               <Button
                 onClick={() => void handleMint()}
                 disabled={!agentName.trim()}
-                className="shrink-0 rounded-full text-[13px]"
+                className="w-full shrink-0 rounded-full text-[13px] sm:w-auto"
                 size="sm"
               >
                 Create invite
@@ -195,18 +195,18 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                 {agents.map((agent) => (
                   <li
                     key={agent._id}
-                    className="flex items-center justify-between py-2"
+                    className="flex items-center justify-between gap-2 py-2"
                   >
-                    <div className="flex items-center gap-2">
+                    <div className="flex min-w-0 items-center gap-2">
                       <span
-                        className="size-2 rounded-full"
+                        className="size-2 shrink-0 rounded-full"
                         style={{ backgroundColor: agent.color }}
                       />
-                      <span className="text-[13px] text-[#292929]">
+                      <span className="truncate text-[13px] text-[#292929]">
                         {agent.name}
                       </span>
                       {agent.revoked && (
-                        <span className="text-[12px] text-[#9E9E9E]">
+                        <span className="shrink-0 text-[12px] text-[#9E9E9E]">
                           revoked
                         </span>
                       )}
@@ -215,7 +215,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="text-[12px] text-[#5D5D5D]"
+                        className="shrink-0 text-[12px] text-[#5D5D5D]"
                         onClick={() => void revoke({ agentId: agent._id })}
                       >
                         Revoke

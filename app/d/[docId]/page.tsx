@@ -24,9 +24,27 @@ import {
 } from "@tiptap/react";
 import type { Editor } from "@tiptap/core";
 import { useQuery } from "convex/react";
+import { HistoryIcon, MessageSquareIcon, ShareIcon } from "lucide-react";
 import Link from "next/link";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
+
+const COMMENT_BTN_WIDTH = 88;
+const COMMENT_BTN_HEIGHT = 32;
+const COMMENT_BTN_MARGIN = 8;
+
+function clampCommentButtonPosition(
+  top: number,
+  left: number,
+): { top: number; left: number } {
+  if (typeof window === "undefined") return { top, left };
+  const maxLeft = window.innerWidth - COMMENT_BTN_WIDTH - COMMENT_BTN_MARGIN;
+  const maxTop = window.innerHeight - COMMENT_BTN_HEIGHT - COMMENT_BTN_MARGIN;
+  return {
+    top: Math.min(Math.max(COMMENT_BTN_MARGIN, top), Math.max(COMMENT_BTN_MARGIN, maxTop)),
+    left: Math.min(Math.max(COMMENT_BTN_MARGIN, left), Math.max(COMMENT_BTN_MARGIN, maxLeft)),
+  };
+}
 
 function SelectionCommentButton({
   onComment,
@@ -56,14 +74,18 @@ function SelectionCommentButton({
       }
 
       const coords = editor.view.coordsAtPos(to);
-      setPosition({ top: coords.bottom + 6, left: coords.left });
+      setPosition(
+        clampCommentButtonPosition(coords.bottom + 6, coords.left),
+      );
       setAnchorText(text);
     };
 
     update();
     editor.on("selectionUpdate", update);
+    window.addEventListener("resize", update);
     return () => {
       editor.off("selectionUpdate", update);
+      window.removeEventListener("resize", update);
     };
   }, [editor]);
 
@@ -202,11 +224,12 @@ export default function DocPage({
 
   return (
     <div
-      className="min-h-screen bg-[#FAFAFA]"
-      style={{ paddingRight: commentsOpen ? 320 : 0 }}
+      className={`min-h-screen bg-[#FAFAFA] ${
+        commentsOpen ? "md:pr-[320px]" : ""
+      }`}
     >
-      <header className="sticky top-0 z-30 flex h-12 items-center justify-between border-b border-[rgba(0,0,0,0.10)] bg-[#FAFAFA]/95 px-4 backdrop-blur-sm">
-        <div className="flex min-w-0 items-center gap-3">
+      <header className="sticky top-0 z-30 flex h-12 items-center justify-between gap-2 border-b border-[rgba(0,0,0,0.10)] bg-[#FAFAFA]/95 px-3 backdrop-blur-sm sm:gap-3 sm:px-4">
+        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
           <Link
             href="/"
             className="shrink-0 text-[12px] text-[#9E9E9E] hover:text-[#5D5D5D]"
@@ -218,31 +241,61 @@ export default function DocPage({
           </span>
         </div>
 
-        <div className="flex shrink-0 items-center gap-3">
-          <AvatarStack
-            humans={presenceState ?? []}
-            agents={onlineAgents}
-          />
+        <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
+          <div className="mr-0.5 hidden min-[400px]:block sm:mr-1">
+            <AvatarStack
+              humans={presenceState ?? []}
+              agents={onlineAgents}
+            />
+          </div>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            className="text-[#5D5D5D] md:hidden"
+            aria-label="Share"
+            onClick={() => setShareOpen(true)}
+          >
+            <ShareIcon className="size-3.5" />
+          </Button>
           <Button
             variant="ghost"
             size="sm"
-            className="text-[13px] text-[#5D5D5D]"
+            className="hidden text-[13px] text-[#5D5D5D] md:inline-flex"
             onClick={() => setShareOpen(true)}
           >
             Share
           </Button>
           <Button
             variant="ghost"
+            size="icon-sm"
+            className="text-[#5D5D5D] md:hidden"
+            aria-label="Comments"
+            aria-pressed={commentsOpen}
+            onClick={() => setCommentsOpen((v) => !v)}
+          >
+            <MessageSquareIcon className="size-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
             size="sm"
-            className="text-[13px] text-[#5D5D5D]"
+            className="hidden text-[13px] text-[#5D5D5D] md:inline-flex"
             onClick={() => setCommentsOpen((v) => !v)}
           >
             Comments
           </Button>
           <Button
             variant="ghost"
+            size="icon-sm"
+            className="text-[#5D5D5D] md:hidden"
+            aria-label="History"
+            onClick={() => setHistoryOpen(true)}
+          >
+            <HistoryIcon className="size-3.5" />
+          </Button>
+          <Button
+            variant="ghost"
             size="sm"
-            className="text-[13px] text-[#5D5D5D]"
+            className="hidden text-[13px] text-[#5D5D5D] md:inline-flex"
             onClick={() => setHistoryOpen(true)}
           >
             History
@@ -250,7 +303,7 @@ export default function DocPage({
         </div>
       </header>
 
-      <main className="mx-auto max-w-[640px] px-4 pt-16 pb-24">
+      <main className="mx-auto max-w-[640px] px-4 pt-10 pb-20 sm:pt-16 sm:pb-24">
         {sync.isLoading ? null : sync.initialContent !== null ? (
           <EditorProvider
             extensions={extensions}

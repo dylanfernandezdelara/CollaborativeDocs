@@ -88,7 +88,7 @@ export function AvatarStack({
 
   return (
     <TooltipProvider delay={200}>
-      <div className="flex -space-x-1.5">
+      <div className="flex shrink-0 -space-x-1.5">
         {onlineHumans.map((human) => (
           <PresenceAvatar
             key={human.userId}
