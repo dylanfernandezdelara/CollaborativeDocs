@@ -202,7 +202,8 @@ export default function DocPage({
     ownerLoaded,
     // Skipped auth queries stay undefined — treat signed-out as settled.
     userSettled: !authLoading && (!isAuthenticated || user !== undefined),
-    displayName,
+    // Guest labels are for presence/comments only — never overwrite seat names.
+    profileName: user?.name?.trim() || undefined,
   });
 
   const [tick, setTick] = useState(() => Date.now());
@@ -255,7 +256,13 @@ export default function DocPage({
     { label: "History", icon: HistoryIcon, onClick: () => setHistoryOpen(true) },
   ];
 
-  if (doc === undefined) return null;
+  if (doc === undefined) {
+    return (
+      <div className="flex min-h-screen flex-col items-center justify-center">
+        <p className="text-[14px] text-ink-tertiary">Loading…</p>
+      </div>
+    );
+  }
 
   if (doc === null) {
     return (
@@ -310,7 +317,9 @@ export default function DocPage({
       </header>
 
       <main className="mx-auto max-w-[640px] px-4 pt-10 pb-20 sm:pt-16 sm:pb-24">
-        {sync.isLoading ? null : sync.initialContent !== null ? (
+        {sync.isLoading ? (
+          <p className="text-[14px] text-ink-tertiary">Loading…</p>
+        ) : sync.initialContent !== null ? (
           <EditorProvider
             extensions={extensions}
             content={sync.initialContent}

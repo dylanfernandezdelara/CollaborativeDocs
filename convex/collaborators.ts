@@ -59,6 +59,7 @@ async function refreshName(
   currentName: string,
   displayName: string | undefined,
 ) {
+  // Callers must omit auto guest labels; only real profile names overwrite.
   if (displayName && displayName !== currentName) {
     await ctx.db.patch("collaborators", id, { name: displayName });
   }
@@ -98,7 +99,8 @@ async function mergeIntoExistingSeat(
   if (existing.revoked) {
     await ctx.db.patch("collaborators", existing._id, {
       revoked: false,
-      name: displayName || existing.name,
+      // Prefer profile name, else this invite's chosen label, else prior seat.
+      name: displayName || invite.name || existing.name,
       joinedAt: existing.joinedAt ?? Date.now(),
     });
   } else {
