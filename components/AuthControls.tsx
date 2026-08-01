@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { api } from "@/convex/_generated/api";
 import { rememberAuthProvider, useLastAuthProvider } from "@/lib/lastAuthProvider";
 import { useAuthActions } from "@convex-dev/auth/react";
-import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { useConvexAuth, useQuery } from "convex/react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 
@@ -19,21 +19,16 @@ function GitHubIcon() {
   );
 }
 
-export function AuthNav({ localOwnerId }: { localOwnerId?: string }) {
+export function AuthNav() {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const user = useQuery(api.users.current, isAuthenticated ? {} : "skip");
-  const claim = useMutation(api.documents.claim);
   const { signOut } = useAuthActions();
   const [signingOut, setSigningOut] = useState(false);
 
   useEffect(() => {
     if (!isAuthenticated) return;
-
     rememberAuthProvider("github");
-    if (localOwnerId) {
-      void claim({ localOwnerId }).catch(() => undefined);
-    }
-  }, [claim, isAuthenticated, localOwnerId]);
+  }, [isAuthenticated]);
 
   if (isLoading) {
     return <span className="h-7 w-14" aria-hidden="true" />;

@@ -15,6 +15,7 @@ import {
   userOwnerId,
   viewerSubjectIds,
 } from "./lib/owner";
+import { rebindSeat } from "./lib/collaboratorSeats";
 import type { Doc } from "./_generated/dataModel";
 
 const CLAIM_BATCH_SIZE = 100;
@@ -76,7 +77,11 @@ async function claimLocalIdentity(
     });
   }
   for (const collaboration of collaborations) {
-    await migrateCollaboratorSeat(ctx, collaboration, claim.userOwnerId);
+    // Local seats are folded into the account identity; the source row is
+    // deleted so the local subject stops matching future claim batches.
+    await rebindSeat(ctx, collaboration, claim.userOwnerId, {
+      retire: "delete",
+    });
   }
 
   return {
@@ -86,44 +91,6 @@ async function claimLocalIdentity(
       documents.length < CLAIM_BATCH_SIZE &&
       collaborations.length < CLAIM_BATCH_SIZE,
   };
-}
-
-async function migrateCollaboratorSeat(
-  ctx: MutationCtx,
-  localSeat: Doc<"collaborators">,
-  userSubjectId: string,
-) {
-  const userSeats = await ctx.db
-    .query("collaborators")
-    .withIndex("by_doc_and_subject", (q) =>
-      q.eq("docId", localSeat.docId).eq("subjectId", userSubjectId),
-    )
-    .take(20);
-
-  if (userSeats.length === 0) {
-    await ctx.db.patch("collaborators", localSeat._id, {
-      subjectId: userSubjectId,
-    });
-    return;
-  }
-
-  const keeper =
-    userSeats.find((seat) => !seat.revoked) ??
-    userSeats.sort((a, b) => a.createdAt - b.createdAt)[0]!;
-
-  if (!localSeat.revoked) {
-    await ctx.db.patch("collaborators", keeper._id, {
-      name: localSeat.name,
-      revoked: false,
-      joinedAt: keeper.joinedAt ?? localSeat.joinedAt ?? Date.now(),
-    });
-  }
-  for (const seat of userSeats) {
-    if (seat._id !== keeper._id && !seat.revoked) {
-      await ctx.db.patch("collaborators", seat._id, { revoked: true });
-    }
-  }
-  await ctx.db.delete("collaborators", localSeat._id);
 }
 
 async function getOrCreateIdentityClaim(
@@ -217,6 +184,18 @@ export const list = query({
     const userId = await getAuthUserId(ctx);
     const subjectIds = viewerSubjectIds(userId, args.localOwnerId);
 
+    // Legacy docs created before ownership shipped have no ownerId. They were
+    // visible to everyone then, so keep them on the home list rather than
+    // silently dropping pre-existing production content.
+    const legacyDocs = await ctx.db
+      .query("documents")
+      .withIndex("by_owner", (q) => q.eq("ownerId", undefined))
+      .order("desc")
+      .take(50);
+    for (const doc of legacyDocs) {
+      byId.set(doc._id, doc);
+    }
+
     for (const subjectId of subjectIds) {
       const owned = await ctx.db
         .query("documents")
@@ -270,6 +249,15 @@ export const claim = mutation({
       args.localOwnerId,
       userOwnerId(userId),
     );
+    // `completedAt` only marks the previous sync pass as finished. Anonymous
+    // docs created after that pass (sign out, create, sign back in) still
+    // need migrating, so an explicit claim always re-runs.
+    if (identityClaim.completedAt) {
+      await ctx.db.patch("identityClaims", identityClaim._id, {
+        completedAt: undefined,
+      });
+      identityClaim.completedAt = undefined;
+    }
     return await continueIdentityClaim(ctx, identityClaim);
   },
 });

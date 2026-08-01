@@ -10,6 +10,11 @@ import { getHighlights, setHighlights } from "@/lib/highlightStore";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { ShareDialog } from "@/components/ShareDialog";
 import { Button } from "@/components/ui/button";
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { editorExtensions } from "@/lib/editorExtensions";
@@ -25,7 +30,14 @@ import {
 } from "@tiptap/react";
 import type { Editor } from "@tiptap/core";
 import { useConvexAuth, useQuery } from "convex/react";
-import { HistoryIcon, MessageSquareIcon, ShareIcon } from "lucide-react";
+import {
+  FileTextIcon,
+  HistoryIcon,
+  HomeIcon,
+  MessageSquareIcon,
+  MoreHorizontalIcon,
+  UserRoundPlusIcon,
+} from "lucide-react";
 import Link from "next/link";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -207,6 +219,7 @@ export default function DocPage({
 
   const [tick, setTick] = useState(() => Date.now());
   const [shareOpen, setShareOpen] = useState(false);
+  const [overflowOpen, setOverflowOpen] = useState(false);
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [composeAnchor, setComposeAnchor] = useState<string | null>(null);
@@ -239,13 +252,12 @@ export default function DocPage({
     setCommentsOpen(true);
   }
 
-  const headerActions: Array<{
+  const overflowActions: Array<{
     label: string;
-    icon: typeof ShareIcon;
+    icon: typeof HistoryIcon;
     onClick: () => void;
     pressed?: boolean;
   }> = [
-    { label: "Share", icon: ShareIcon, onClick: () => setShareOpen(true) },
     {
       label: "Comments",
       icon: MessageSquareIcon,
@@ -272,40 +284,74 @@ export default function DocPage({
     <div
       className={`min-h-screen ${commentsOpen ? "md:pr-[320px]" : ""}`}
     >
-      <header className="sticky top-0 z-30 flex h-12 items-center justify-between gap-2 border-b border-ink/10 bg-page/90 px-3 backdrop-blur-sm sm:gap-3 sm:px-4">
-        <div className="flex min-w-0 items-center gap-2 sm:gap-3">
-          <Link
-            href="/"
-            className="shrink-0 text-[12px] text-ink-tertiary hover:text-ink-secondary"
+      <header className="pointer-events-none sticky top-4 z-30 flex items-start justify-between px-4 sm:top-6 sm:px-6">
+        <Link
+          href="/"
+          aria-label="All documents"
+          title="All documents"
+          className="pointer-events-auto flex size-8 shrink-0 items-center justify-center rounded-full border border-ink/10 bg-page-elevated/90 text-ink-secondary backdrop-blur-sm transition-colors hover:bg-surface-hover hover:text-ink"
+        >
+          <HomeIcon className="size-3.5" />
+        </Link>
+        <div className="pointer-events-auto flex shrink-0 items-center gap-2">
+          <AvatarStack
+            humans={presenceState ?? []}
+            agents={onlineAgents}
+          />
+          <button
+            type="button"
+            aria-label="Share"
+            title="Share"
+            className="flex size-6 items-center justify-center rounded-full border border-dashed border-ink-tertiary/70 text-ink-tertiary transition-colors hover:border-ink-secondary hover:bg-surface-hover hover:text-ink-secondary"
+            onClick={() => setShareOpen(true)}
           >
-            CollabDocs
-          </Link>
-          <span className="truncate text-[14px] font-medium text-ink">
-            {doc.title}
-          </span>
-        </div>
-
-        <div className="flex shrink-0 items-center gap-0.5 sm:gap-2">
-          <div className="mr-0.5 sm:mr-1">
-            <AvatarStack
-              humans={presenceState ?? []}
-              agents={onlineAgents}
+            <UserRoundPlusIcon className="size-3" />
+          </button>
+          <Popover open={overflowOpen} onOpenChange={setOverflowOpen}>
+            <PopoverTrigger
+              render={
+                <Button
+                  variant="ghost"
+                  size="icon-lg"
+                  className="size-8 shrink-0 rounded-full border border-ink/10 bg-page-elevated/90 text-ink-secondary backdrop-blur-sm hover:bg-surface-hover"
+                  aria-label="More actions"
+                >
+                  <MoreHorizontalIcon className="size-3.5" />
+                </Button>
+              }
             />
-          </div>
-          {headerActions.map(({ label, icon: Icon, onClick, pressed }) => (
-            <Button
-              key={label}
-              variant="ghost"
-              size="sm"
-              className="w-7 px-0 text-ink-secondary md:w-auto md:px-2.5"
-              aria-label={label}
-              aria-pressed={pressed}
-              onClick={onClick}
-            >
-              <Icon className="size-3.5 md:hidden" />
-              <span className="hidden text-[13px] md:inline">{label}</span>
-            </Button>
-          ))}
+            <PopoverContent align="end" sideOffset={6} className="w-44 p-1">
+              {overflowActions.map(({ label, icon: Icon, onClick, pressed }) => (
+                <button
+                  key={label}
+                  type="button"
+                  aria-pressed={pressed}
+                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink"
+                  onClick={() => {
+                    setOverflowOpen(false);
+                    onClick();
+                  }}
+                >
+                  <Icon className="size-3.5 text-ink-tertiary" />
+                  {label}
+                  {pressed ? (
+                    <span className="ml-auto text-[11px] text-ink-tertiary">
+                      Open
+                    </span>
+                  ) : null}
+                </button>
+              ))}
+              <div className="mx-1 my-1 border-t border-ink/8" />
+              <Link
+                href="/"
+                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink"
+                onClick={() => setOverflowOpen(false)}
+              >
+                <FileTextIcon className="size-3.5 text-ink-tertiary" />
+                All documents
+              </Link>
+            </PopoverContent>
+          </Popover>
         </div>
       </header>
 

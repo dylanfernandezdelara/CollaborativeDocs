@@ -49,7 +49,7 @@ export default function HomePage() {
         className="flex min-h-8 items-center justify-between gap-4"
       >
         <span className="text-[14px] font-medium text-ink">CollabDocs</span>
-        <AuthNav localOwnerId={localId} />
+        <AuthNav />
       </nav>
 
       <section className="mt-16 sm:mt-24">

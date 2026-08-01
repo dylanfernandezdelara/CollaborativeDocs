@@ -3,6 +3,7 @@
 import { ConvexAuthNextjsProvider } from "@convex-dev/auth/nextjs";
 import { ConvexReactClient } from "convex/react";
 import { ReactNode, useState } from "react";
+import { SyncLocalIdentity } from "@/components/SyncLocalIdentity";
 
 function createClient(): ConvexReactClient | null {
   const url = process.env.NEXT_PUBLIC_CONVEX_URL;
@@ -25,6 +26,9 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
   }
 
   return (
-    <ConvexAuthNextjsProvider client={client}>{children}</ConvexAuthNextjsProvider>
+    <ConvexAuthNextjsProvider client={client}>
+      <SyncLocalIdentity />
+      {children}
+    </ConvexAuthNextjsProvider>
   );
 }
