@@ -1,9 +1,22 @@
 import { getAuthUserId } from "@convex-dev/auth/server";
 import type { MutationCtx, QueryCtx } from "../_generated/server";
 
+/**
+ * One validation rule for local (cookie) identities everywhere: `local:`
+ * followed by a 20–200 char URL-safe key. Anything looser would let
+ * ownership, membership, and claim flows disagree about the same string.
+ */
 export function isLocalOwnerId(ownerId: string): boolean {
-  return ownerId.startsWith("local:") && ownerId.length > "local:".length;
+  if (!ownerId.startsWith("local:")) return false;
+  const key = ownerId.slice("local:".length);
+  return (
+    key.length >= 20 &&
+    key.length <= 200 &&
+    /^[A-Za-z0-9_-]+$/.test(key)
+  );
 }
+
+export const isClaimableLocalOwnerId = isLocalOwnerId;
 
 export function userOwnerId(userId: string): string {
   return `user:${userId}`;

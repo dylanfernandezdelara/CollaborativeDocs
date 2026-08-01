@@ -1,5 +1,6 @@
 import { internalQuery, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
+import { assertCanManageDoc } from "./lib/access";
 
 // Paper-palette accents (no teal/sea-glass — see DESIGN.md).
 const AGENT_COLORS = [
@@ -17,21 +18,19 @@ export const mint = mutation({
   args: {
     docId: v.id("documents"),
     name: v.string(),
+    localOwnerId: v.optional(v.string()),
   },
   returns: v.object({
     agentId: v.id("agents"),
     token: v.string(),
   }),
   handler: async (ctx, args) => {
-    const doc = await ctx.db.get("documents", args.docId);
-    if (!doc) {
-      throw new Error("Document not found");
-    }
+    await assertCanManageDoc(ctx, args.docId, args.localOwnerId);
 
     const existingAgents = await ctx.db
       .query("agents")
       .withIndex("by_doc", (q) => q.eq("docId", args.docId))
-      .collect();
+      .take(200);
 
     const token = (
       crypto.randomUUID().replace(/-/g, "") +
@@ -55,13 +54,17 @@ export const mint = mutation({
 });
 
 export const revoke = mutation({
-  args: { agentId: v.id("agents") },
+  args: {
+    agentId: v.id("agents"),
+    localOwnerId: v.optional(v.string()),
+  },
   returns: v.null(),
   handler: async (ctx, args) => {
     const agent = await ctx.db.get("agents", args.agentId);
     if (!agent) {
       throw new Error("Agent not found");
     }
+    await assertCanManageDoc(ctx, agent.docId, args.localOwnerId);
     await ctx.db.patch("agents", args.agentId, { revoked: true });
     return null;
   },

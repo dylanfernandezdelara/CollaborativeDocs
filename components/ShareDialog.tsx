@@ -17,6 +17,7 @@ import {
   buildJoinCurlCommand,
 } from "@/lib/agentInvite";
 import { buildHumanInviteUrl } from "@/lib/humanInvite";
+import { localOwnerId as toLocalOwnerId, useOwnerKey } from "@/lib/ownerKey";
 import { Check, ChevronDown, ChevronRight, Copy } from "lucide-react";
 import { useRef, useState } from "react";
 
@@ -131,10 +132,13 @@ function statusLabel(row: AccessRow): string {
 }
 
 export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
+  const { ownerKey } = useOwnerKey();
+  const localId = ownerKey ? toLocalOwnerId(ownerKey) : undefined;
+
   const agents = useQuery(api.agents.listForDoc, open ? { docId } : "skip");
   const people = useQuery(
     api.collaborators.listForDoc,
-    open ? { docId } : "skip",
+    open ? { docId, localOwnerId: localId } : "skip",
   );
   const mintAgent = useMutation(api.agents.mint);
   const revokeAgent = useMutation(api.agents.revoke);
@@ -252,7 +256,11 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
     setCreating(true);
     try {
       if (inviteKind === "person") {
-        const result = await mintHuman({ docId, name: trimmed });
+        const result = await mintHuman({
+          docId,
+          name: trimmed,
+          localOwnerId: localId,
+        });
         setMinted({
           kind: "person",
           id: result.collaboratorId,
@@ -262,7 +270,11 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
         return;
       }
 
-      const result = await mintAgent({ docId, name: trimmed });
+      const result = await mintAgent({
+        docId,
+        name: trimmed,
+        localOwnerId: localId,
+      });
       setMinted({
         kind: "agent",
         id: result.agentId,
@@ -419,9 +431,15 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                         className="shrink-0 text-[12px] text-ink-secondary"
                         onClick={() => {
                           if (row.kind === "person") {
-                            void revokeHuman({ collaboratorId: row.id });
+                            void revokeHuman({
+                              collaboratorId: row.id,
+                              localOwnerId: localId,
+                            });
                           } else {
-                            void revokeAgent({ agentId: row.id });
+                            void revokeAgent({
+                              agentId: row.id,
+                              localOwnerId: localId,
+                            });
                           }
                         }}
                       >

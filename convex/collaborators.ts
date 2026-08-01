@@ -1,14 +1,25 @@
 import { mutation, query } from "./_generated/server";
 import type { MutationCtx } from "./_generated/server";
-import type { Doc, Id } from "./_generated/dataModel";
+import type { Doc } from "./_generated/dataModel";
 import { v } from "convex/values";
 import { resolveViewerId } from "./lib/owner";
+import { assertCanManageDoc, canManageDoc } from "./lib/access";
+import { claimInviteSeat } from "./lib/collaboratorSeats";
+
+const MAX_NAME_LENGTH = 80;
+const MAX_SEATS_PER_DOC = 200;
 
 function mintToken(): string {
   return (
     crypto.randomUUID().replace(/-/g, "") +
     crypto.randomUUID().replace(/-/g, "")
   );
+}
+
+function normalizeName(raw: string | undefined): string | undefined {
+  const name = raw?.trim();
+  if (!name) return undefined;
+  return name.slice(0, MAX_NAME_LENGTH);
 }
 
 const collaboratorPublicValidator = v.object({
@@ -40,108 +51,11 @@ async function findInviteByToken(
     .unique();
 }
 
-async function seatsForSubject(
-  ctx: MutationCtx,
-  docId: Id<"documents">,
-  subjectId: string,
-): Promise<Doc<"collaborators">[]> {
-  return await ctx.db
-    .query("collaborators")
-    .withIndex("by_doc_and_subject", (q) =>
-      q.eq("docId", docId).eq("subjectId", subjectId),
-    )
-    .take(20);
-}
-
-async function refreshName(
-  ctx: MutationCtx,
-  id: Id<"collaborators">,
-  currentName: string,
-  displayName: string | undefined,
-) {
-  // Callers must omit auto guest labels; only real profile names overwrite.
-  if (displayName && displayName !== currentName) {
-    await ctx.db.patch("collaborators", id, { name: displayName });
-  }
-}
-
-/** Keep one active seat per (doc, subject); revoke the rest. */
-async function collapseDuplicateSeats(
-  ctx: MutationCtx,
-  docId: Id<"documents">,
-  subjectId: string,
-  preferredId: Id<"collaborators">,
-): Promise<Id<"collaborators">> {
-  const seats = await seatsForSubject(ctx, docId, subjectId);
-  const active = seats.filter((seat) => !seat.revoked);
-  if (active.length <= 1) {
-    return preferredId;
-  }
-
-  const keeper =
-    active.find((seat) => seat._id === preferredId) ??
-    active.sort((a, b) => a.createdAt - b.createdAt)[0]!;
-
-  for (const seat of active) {
-    if (seat._id !== keeper._id) {
-      await ctx.db.patch("collaborators", seat._id, { revoked: true });
-    }
-  }
-  return keeper._id;
-}
-
-async function mergeIntoExistingSeat(
-  ctx: MutationCtx,
-  invite: Doc<"collaborators">,
-  existing: Doc<"collaborators">,
-  displayName: string | undefined,
-): Promise<Id<"collaborators">> {
-  if (existing.revoked) {
-    await ctx.db.patch("collaborators", existing._id, {
-      revoked: false,
-      // Prefer profile name, else this invite's chosen label, else prior seat.
-      name: displayName || invite.name || existing.name,
-      joinedAt: existing.joinedAt ?? Date.now(),
-    });
-  } else {
-    await refreshName(ctx, existing._id, existing.name, displayName);
-  }
-  if (invite._id !== existing._id) {
-    await ctx.db.patch("collaborators", invite._id, { revoked: true });
-  }
-  return existing._id;
-}
-
-async function bindInviteToSubject(
-  ctx: MutationCtx,
-  invite: Doc<"collaborators">,
-  subjectId: string,
-  displayName: string | undefined,
-): Promise<Id<"collaborators">> {
-  const patch: {
-    subjectId: string;
-    joinedAt: number;
-    name?: string;
-  } = {
-    subjectId,
-    joinedAt: Date.now(),
-  };
-  if (displayName) {
-    patch.name = displayName;
-  }
-  await ctx.db.patch("collaborators", invite._id, patch);
-  return await collapseDuplicateSeats(
-    ctx,
-    invite.docId,
-    subjectId,
-    invite._id,
-  );
-}
-
 export const mint = mutation({
   args: {
     docId: v.id("documents"),
     name: v.string(),
+    localOwnerId: v.optional(v.string()),
   },
   returns: v.object({
     collaboratorId: v.id("collaborators"),
@@ -152,14 +66,11 @@ export const mint = mutation({
     if (!name) {
       throw new Error("Name is required");
     }
-    if (name.length > 80) {
+    if (name.length > MAX_NAME_LENGTH) {
       throw new Error("Name must be 80 characters or fewer");
     }
 
-    const doc = await ctx.db.get("documents", args.docId);
-    if (!doc) {
-      throw new Error("Document not found");
-    }
+    await assertCanManageDoc(ctx, args.docId, args.localOwnerId);
 
     const token = mintToken();
     const collaboratorId = await ctx.db.insert("collaborators", {
@@ -197,67 +108,28 @@ export const accept = mutation({
       throw new Error("Missing local identity");
     }
 
-    const displayName = args.displayName?.trim() || undefined;
-
-    if (invite.subjectId === subjectId) {
-      await refreshName(ctx, invite._id, invite.name, displayName);
-      const collaboratorId = await collapseDuplicateSeats(
-        ctx,
-        invite.docId,
-        subjectId,
-        invite._id,
-      );
-      return {
-        outcome: "joined" as const,
-        docId: invite.docId,
-        collaboratorId,
-      };
-    }
-
-    if (invite.subjectId && invite.subjectId !== subjectId) {
-      return { outcome: "already_used" as const };
-    }
-
-    const existingSeats = await seatsForSubject(ctx, invite.docId, subjectId);
-    const existing =
-      existingSeats.find((seat) => seat._id !== invite._id) ?? null;
-
-    if (existing) {
-      const collaboratorId = await mergeIntoExistingSeat(
-        ctx,
-        invite,
-        existing,
-        displayName,
-      );
-      const kept = await collapseDuplicateSeats(
-        ctx,
-        invite.docId,
-        subjectId,
-        collaboratorId,
-      );
-      return {
-        outcome: "joined" as const,
-        docId: invite.docId,
-        collaboratorId: kept,
-      };
-    }
-
-    const collaboratorId = await bindInviteToSubject(
+    const result = await claimInviteSeat(
       ctx,
       invite,
       subjectId,
-      displayName,
+      normalizeName(args.displayName),
     );
+    if (result.outcome === "already_used") {
+      return { outcome: "already_used" as const };
+    }
     return {
       outcome: "joined" as const,
       docId: invite.docId,
-      collaboratorId,
+      collaboratorId: result.collaboratorId,
     };
   },
 });
 
 export const revoke = mutation({
-  args: { collaboratorId: v.id("collaborators") },
+  args: {
+    collaboratorId: v.id("collaborators"),
+    localOwnerId: v.optional(v.string()),
+  },
   returns: v.null(),
   handler: async (ctx, args) => {
     const collaborator = await ctx.db.get(
@@ -267,6 +139,7 @@ export const revoke = mutation({
     if (!collaborator) {
       throw new Error("Collaborator not found");
     }
+    await assertCanManageDoc(ctx, collaborator.docId, args.localOwnerId);
     await ctx.db.patch("collaborators", args.collaboratorId, {
       revoked: true,
     });
@@ -275,13 +148,21 @@ export const revoke = mutation({
 });
 
 export const listForDoc = query({
-  args: { docId: v.id("documents") },
+  args: {
+    docId: v.id("documents"),
+    localOwnerId: v.optional(v.string()),
+  },
   returns: v.array(collaboratorPublicValidator),
   handler: async (ctx, args) => {
+    const access = await canManageDoc(ctx, args.docId, args.localOwnerId);
+    if (!access || !access.allowed) {
+      return [];
+    }
+
     const people = await ctx.db
       .query("collaborators")
       .withIndex("by_doc", (q) => q.eq("docId", args.docId))
-      .collect();
+      .take(MAX_SEATS_PER_DOC);
 
     return people
       .map(({ _id, name, revoked, subjectId, createdAt }) => ({
