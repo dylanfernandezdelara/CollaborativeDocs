@@ -20,6 +20,7 @@ import type * as intents from "../intents.js";
 import type * as lib_access from "../lib/access.js";
 import type * as lib_agentAuth from "../lib/agentAuth.js";
 import type * as lib_collaboratorSeats from "../lib/collaboratorSeats.js";
+import type * as lib_lastEdit from "../lib/lastEdit.js";
 import type * as lib_markdown from "../lib/markdown.js";
 import type * as lib_owner from "../lib/owner.js";
 import type * as notifications from "../notifications.js";
@@ -46,6 +47,7 @@ declare const fullApi: ApiFromModules<{
   "lib/access": typeof lib_access;
   "lib/agentAuth": typeof lib_agentAuth;
   "lib/collaboratorSeats": typeof lib_collaboratorSeats;
+  "lib/lastEdit": typeof lib_lastEdit;
   "lib/markdown": typeof lib_markdown;
   "lib/owner": typeof lib_owner;
   notifications: typeof notifications;

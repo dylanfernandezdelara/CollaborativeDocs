@@ -62,8 +62,8 @@ export function HistoryPanel({ docId, open, onOpenChange }: HistoryPanelProps) {
             <ul className="space-y-4">
               {edits.map((edit) => (
                 <li key={edit._id}>
-                  <p className="text-[13px] text-ink">
-                    {edit.agentName} — {edit.task}
+                  <p className="text-[13px] tracking-[-0.15px] text-ink">
+                    {edit.agentName} (agent) — {edit.task}
                   </p>
                   <p className="mt-0.5 text-[12px] text-ink-tertiary">
                     {edit.summary}

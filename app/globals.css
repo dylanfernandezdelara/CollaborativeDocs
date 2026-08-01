@@ -39,7 +39,7 @@
   --color-popover: var(--popover);
   --color-card-foreground: var(--card-foreground);
   --color-card: var(--card);
-  /* DESIGN.md paper roles (dylanfdl.com) — prefer these over arbitrary hex */
+  /* DESIGN.md paper roles (Bone · Olive) — prefer these over arbitrary hex */
   --color-ink: var(--text-primary);
   --color-ink-secondary: var(--text-secondary);
   --color-ink-tertiary: var(--text-tertiary);
@@ -56,94 +56,86 @@
 }
 
 :root {
-  /* Warm paper palette from dylanfdl.com (light) */
-  --background: #fffef8;
-  --foreground: #374151;
-  --card: #fffef8;
-  --card-foreground: #374151;
-  --popover: #fffef8;
-  --popover-foreground: #030303;
-  --primary: #5f5faf;
-  --primary-foreground: #fffef8;
-  --secondary: #faf8f0;
-  --secondary-foreground: #374151;
-  --muted: #f5f2e8;
-  --muted-foreground: #6b7280;
-  --accent: #f0ede0;
-  --accent-foreground: #030303;
+  /* Bone · Olive (light) — DESIGN.md */
+  --background: #fbfaf4;
+  --foreground: #1c1b17;
+  --card: #fbfaf4;
+  --card-foreground: #1c1b17;
+  --popover: #fbfaf4;
+  --popover-foreground: #1c1b17;
+  --primary: #6b7233;
+  --primary-foreground: #fbfaf4;
+  --secondary: #f1efe4;
+  --secondary-foreground: #1c1b17;
+  --muted: #f1efe4;
+  --muted-foreground: #57544a;
+  --accent: #f1efe4;
+  --accent-foreground: #1c1b17;
   --destructive: #af5f5f;
-  --border: #f0ede0;
-  --input: #f5f2e8;
-  --ring: #5f5faf;
-  --chart-1: #5f5faf;
+  --border: #e9e6d8;
+  --input: #f1efe4;
+  --ring: #6b7233;
+  --chart-1: #6b7233;
   --chart-2: #5f8787;
   --chart-3: #af875f;
   --chart-4: #5f875f;
   --chart-5: #af5f5f;
   --radius: 0.625rem;
-  --sidebar: #fffef8;
-  --sidebar-foreground: #374151;
-  --sidebar-primary: #5f5faf;
-  --sidebar-primary-foreground: #fffef8;
-  --sidebar-accent: #f0ede0;
-  --sidebar-accent-foreground: #030303;
-  --sidebar-border: #f0ede0;
-  --sidebar-ring: #5f5faf;
-  --page-bg: #fffef8;
-  --page-bg-elevated: #faf8f0;
-  --surface-hover: #f5f2e8;
-  --text-primary: #030303;
-  --text-secondary: #374151;
-  --text-tertiary: #6b7280;
-  --wash-top: color-mix(in srgb, #ebe8d8 55%, transparent);
-  --wash-bottom: color-mix(in srgb, #f0ede0 40%, transparent);
-  --wash-start: #fffef8;
-  --wash-end: #faf8f0;
+  --sidebar: #fbfaf4;
+  --sidebar-foreground: #1c1b17;
+  --sidebar-primary: #6b7233;
+  --sidebar-primary-foreground: #fbfaf4;
+  --sidebar-accent: #f1efe4;
+  --sidebar-accent-foreground: #1c1b17;
+  --sidebar-border: #e9e6d8;
+  --sidebar-ring: #6b7233;
+  --page-bg: #fbfaf4;
+  --page-bg-elevated: #f1efe4;
+  --surface-hover: #f1efe4;
+  --text-primary: #1c1b17;
+  --text-secondary: #57544a;
+  --text-tertiary: #948f7d;
 }
 
 .dark {
-  /* Warm paper palette from dylanfdl.com (dark) */
-  --background: #171512;
-  --foreground: #ddd8cc;
-  --card: #1b1815;
-  --card-foreground: #ddd8cc;
-  --popover: #1b1815;
-  --popover-foreground: #ebe6dc;
-  --primary: #9ca4e8;
-  --primary-foreground: #141210;
-  --secondary: #201d19;
-  --secondary-foreground: #ddd8cc;
-  --muted: #201d19;
-  --muted-foreground: #a39a8c;
-  --accent: #28241e;
-  --accent-foreground: #ebe6dc;
+  /* Bone · Olive (dark) — warm near-black, lighter olive accent */
+  --background: #191813;
+  --foreground: #eceae0;
+  --card: #1f1e18;
+  --card-foreground: #eceae0;
+  --popover: #1f1e18;
+  --popover-foreground: #eceae0;
+  --primary: #9aa25a;
+  --primary-foreground: #191813;
+  --secondary: #26251e;
+  --secondary-foreground: #eceae0;
+  --muted: #26251e;
+  --muted-foreground: #a39e8c;
+  --accent: #26251e;
+  --accent-foreground: #eceae0;
   --destructive: #c47070;
-  --border: #28241e;
-  --input: #28241e;
-  --ring: #9ca4e8;
-  --chart-1: #9ca4e8;
+  --border: #2e2c24;
+  --input: #26251e;
+  --ring: #9aa25a;
+  --chart-1: #9aa25a;
   --chart-2: #88b8b8;
   --chart-3: #d4a870;
   --chart-4: #7a9a7a;
   --chart-5: #c47070;
-  --sidebar: #1b1815;
-  --sidebar-foreground: #ddd8cc;
-  --sidebar-primary: #9ca4e8;
-  --sidebar-primary-foreground: #141210;
-  --sidebar-accent: #28241e;
-  --sidebar-accent-foreground: #ebe6dc;
-  --sidebar-border: #28241e;
-  --sidebar-ring: #9ca4e8;
-  --page-bg: #171512;
-  --page-bg-elevated: #1b1815;
-  --surface-hover: #201d19;
-  --text-primary: #ebe6dc;
-  --text-secondary: #ddd8cc;
-  --text-tertiary: #a39a8c;
-  --wash-top: color-mix(in srgb, #302b24 40%, transparent);
-  --wash-bottom: color-mix(in srgb, #28241e 30%, transparent);
-  --wash-start: #171512;
-  --wash-end: #1b1815;
+  --sidebar: #1f1e18;
+  --sidebar-foreground: #eceae0;
+  --sidebar-primary: #9aa25a;
+  --sidebar-primary-foreground: #191813;
+  --sidebar-accent: #26251e;
+  --sidebar-accent-foreground: #eceae0;
+  --sidebar-border: #2e2c24;
+  --sidebar-ring: #9aa25a;
+  --page-bg: #191813;
+  --page-bg-elevated: #1f1e18;
+  --surface-hover: #26251e;
+  --text-primary: #eceae0;
+  --text-secondary: #c4bfae;
+  --text-tertiary: #8a8574;
 }
 
 @layer base {
@@ -157,24 +149,6 @@
   }
   body {
     background-color: var(--page-bg);
-    background-image:
-      radial-gradient(
-        ellipse 100% 60% at 50% -20%,
-        var(--wash-top),
-        transparent 65%
-      ),
-      radial-gradient(
-        ellipse 70% 45% at 100% 100%,
-        var(--wash-bottom),
-        transparent 55%
-      ),
-      linear-gradient(
-        180deg,
-        var(--wash-start) 0%,
-        var(--page-bg) 40%,
-        var(--wash-end) 100%
-      );
-    background-attachment: fixed;
     color: var(--text-primary);
   }
 }

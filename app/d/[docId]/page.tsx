@@ -9,7 +9,7 @@ import {
 import { getHighlights, setHighlights } from "@/lib/highlightStore";
 import { HistoryPanel } from "@/components/HistoryPanel";
 import { ShareDialog } from "@/components/ShareDialog";
-import { Button } from "@/components/ui/button";
+import { TextAction, textActionClassName } from "@/components/TextAction";
 import {
   Popover,
   PopoverContent,
@@ -20,6 +20,7 @@ import type { Id } from "@/convex/_generated/dataModel";
 import { editorExtensions } from "@/lib/editorExtensions";
 import { resolveDisplayName } from "@/lib/displayName";
 import { localOwnerId, useOwnerKey } from "@/lib/ownerKey";
+import { LIVE_AGENT_MS, TOUCH_THROTTLE_MS } from "@/lib/presenceWindows";
 import { useAcceptCollaboratorInvite } from "@/lib/useAcceptCollaboratorInvite";
 import { useTiptapSync } from "@convex-dev/prosemirror-sync/tiptap";
 import usePresence from "@convex-dev/presence/react";
@@ -29,22 +30,55 @@ import {
   useCurrentEditor,
 } from "@tiptap/react";
 import type { Editor } from "@tiptap/core";
-import { useConvexAuth, useQuery } from "convex/react";
-import {
-  FileTextIcon,
-  HistoryIcon,
-  HomeIcon,
-  MessageSquareIcon,
-  MoreHorizontalIcon,
-  UserRoundPlusIcon,
-} from "lucide-react";
+import type { Transaction } from "@tiptap/pm/state";
+import { useConvexAuth, useMutation, useQuery } from "convex/react";
+import { HomeIcon } from "lucide-react";
 import Link from "next/link";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
-// Fallbacks for the first paint, before the pill can be measured.
-const COMMENT_BTN_FALLBACK_WIDTH = 88;
-const COMMENT_BTN_FALLBACK_HEIGHT = 32;
+/**
+ * Throttled last-edit signal for the docs index (~5s while actively editing).
+ * Ignores collab receives (`addToHistory: false`) so remote/agent sync does
+ * not attribute last-edit to the focused local viewer. Display name is
+ * derived server-side from auth / localOwnerId.
+ */
+function DocumentTouch({
+  docId,
+  localOwnerId: localId,
+}: {
+  docId: Id<"documents">;
+  localOwnerId?: string;
+}) {
+  const { editor } = useCurrentEditor();
+  const touch = useMutation(api.documents.touch);
+  const lastTouchRef = useRef(0);
+
+  useEffect(() => {
+    if (!editor || !localId) return;
+
+    const onUpdate = ({ transaction }: { transaction: Transaction }) => {
+      if (!transaction.docChanged || !editor.isFocused) return;
+      // prosemirror-collab receiveTransaction sets addToHistory: false.
+      if (transaction.getMeta("addToHistory") === false) return;
+      const now = Date.now();
+      if (now - lastTouchRef.current < TOUCH_THROTTLE_MS) return;
+      lastTouchRef.current = now;
+      void touch({ docId, localOwnerId: localId });
+    };
+
+    editor.on("update", onUpdate);
+    return () => {
+      editor.off("update", onUpdate);
+    };
+  }, [docId, editor, localId, touch]);
+
+  return null;
+}
+
+// Fallbacks for the first paint, before the action can be measured.
+const COMMENT_BTN_FALLBACK_WIDTH = 64;
+const COMMENT_BTN_FALLBACK_HEIGHT = 20;
 const COMMENT_BTN_MARGIN = 8;
 
 function clampCommentButtonPosition(
@@ -68,7 +102,7 @@ function SelectionCommentButton({
   hideOnMobile: boolean;
 }) {
   const { editor } = useCurrentEditor();
-  const buttonRef = useRef<HTMLButtonElement | null>(null);
+  const buttonRef = useRef<HTMLDivElement | null>(null);
   const [position, setPosition] = useState<{ top: number; left: number } | null>(
     null,
   );
@@ -113,18 +147,16 @@ function SelectionCommentButton({
   if (!editor || !position || typeof document === "undefined") return null;
 
   return createPortal(
-    <Button
+    <div
       ref={buttonRef}
-      size="sm"
-      className={`fixed z-40 rounded-full text-[12px] shadow-sm ${
-        hideOnMobile ? "hidden md:inline-flex" : ""
-      }`}
+      className={`fixed z-40 ${hideOnMobile ? "hidden md:block" : ""}`}
       style={{ top: position.top, left: position.left }}
       onMouseDown={(e) => e.preventDefault()}
-      onClick={() => onComment(anchorText)}
     >
-      Comment
-    </Button>,
+      <TextAction variant="primary" onClick={() => onComment(anchorText)}>
+        Comment
+      </TextAction>
+    </div>,
     document.body,
   );
 }
@@ -243,7 +275,7 @@ export default function DocPage({
   const onlineAgents = useMemo(
     () =>
       (agents ?? [])
-        .filter((a) => !a.revoked && tick - a.lastSeenAt < 90_000)
+        .filter((a) => !a.revoked && tick - a.lastSeenAt < LIVE_AGENT_MS)
         .map((a) => ({ ...a, online: true })),
     [agents, tick],
   );
@@ -255,17 +287,15 @@ export default function DocPage({
 
   const overflowActions: Array<{
     label: string;
-    icon: typeof HistoryIcon;
     onClick: () => void;
     pressed?: boolean;
   }> = [
     {
       label: "Comments",
-      icon: MessageSquareIcon,
       onClick: () => setCommentsOpen((v) => !v),
       pressed: commentsOpen,
     },
-    { label: "History", icon: HistoryIcon, onClick: () => setHistoryOpen(true) },
+    { label: "History", onClick: () => setHistoryOpen(true) },
   ];
 
   if (doc === undefined) {
@@ -300,46 +330,41 @@ export default function DocPage({
         >
           <HomeIcon className="size-3.5" />
         </Link>
-        <div className="pointer-events-auto flex shrink-0 items-center gap-2">
+        <div className="pointer-events-auto flex shrink-0 items-center gap-3">
           <AvatarStack
             humans={presenceState ?? []}
             agents={onlineAgents}
           />
-          <button
-            type="button"
+          <TextAction
+            variant="secondary"
             aria-label="Share"
-            title="Share"
-            className="flex size-6 items-center justify-center rounded-full border border-dashed border-ink-tertiary/70 text-ink-tertiary transition-colors hover:border-ink-secondary hover:bg-surface-hover hover:text-ink-secondary"
             onClick={() => setShareOpen(true)}
           >
-            <UserRoundPlusIcon className="size-3" />
-          </button>
+            Share
+          </TextAction>
           <Popover open={overflowOpen} onOpenChange={setOverflowOpen}>
             <PopoverTrigger
-              render={
-                <Button
-                  variant="ghost"
-                  size="icon-lg"
-                  className="size-8 shrink-0 rounded-full border border-ink/10 bg-page-elevated/90 text-ink-secondary backdrop-blur-sm hover:bg-surface-hover"
-                  aria-label="More actions"
-                >
-                  <MoreHorizontalIcon className="size-3.5" />
-                </Button>
-              }
-            />
-            <PopoverContent align="end" sideOffset={6} className="w-44 p-1">
-              {overflowActions.map(({ label, icon: Icon, onClick, pressed }) => (
+              className={textActionClassName("secondary")}
+              aria-label="More actions"
+            >
+              More
+            </PopoverTrigger>
+            <PopoverContent
+              align="end"
+              sideOffset={6}
+              className="w-44 rounded-[8px] p-1"
+            >
+              {overflowActions.map(({ label, onClick, pressed }) => (
                 <button
                   key={label}
                   type="button"
                   aria-pressed={pressed}
-                  className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-left text-[13px] text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink"
+                  className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-[13px] tracking-[-0.15px] text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink"
                   onClick={() => {
                     setOverflowOpen(false);
                     onClick();
                   }}
                 >
-                  <Icon className="size-3.5 text-ink-tertiary" />
                   {label}
                   {pressed ? (
                     <span className="ml-auto text-[11px] text-ink-tertiary">
@@ -351,10 +376,9 @@ export default function DocPage({
               <div className="mx-1 my-1 border-t border-ink/8" />
               <Link
                 href="/"
-                className="flex w-full items-center gap-2 rounded-md px-2.5 py-1.5 text-[13px] text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink"
+                className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-[13px] tracking-[-0.15px] text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink"
                 onClick={() => setOverflowOpen(false)}
               >
-                <FileTextIcon className="size-3.5 text-ink-tertiary" />
                 All documents
               </Link>
             </PopoverContent>
@@ -380,6 +404,9 @@ export default function DocPage({
             }}
           >
             <EditorContent editor={null} />
+            {ownerLoaded && localId ? (
+              <DocumentTouch docId={docId} localOwnerId={localId} />
+            ) : null}
             <SelectionCommentButton
               onComment={handleStartComment}
               hideOnMobile={commentsOpen}

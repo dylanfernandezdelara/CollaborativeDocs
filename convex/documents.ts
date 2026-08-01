@@ -4,6 +4,7 @@ import {
   mutation,
   query,
   type MutationCtx,
+  type QueryCtx,
 } from "./_generated/server";
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
@@ -11,14 +12,22 @@ import { prosemirrorSync } from "./prosemirror";
 import { markdownToPmNodes } from "./lib/markdown";
 import {
   isClaimableLocalOwnerId,
+  isLocalOwnerId,
   resolveViewerId,
   userOwnerId,
   viewerSubjectIds,
 } from "./lib/owner";
 import { rebindSeat } from "./lib/collaboratorSeats";
-import type { Doc } from "./_generated/dataModel";
+import {
+  normalizeEditorName,
+  recordLastEdit,
+} from "./lib/lastEdit";
+import { guestDisplayName } from "../lib/displayName";
+import type { Doc, Id } from "./_generated/dataModel";
 
 const CLAIM_BATCH_SIZE = 100;
+/** Soft server throttle so repeated touches from one editor do not thrash. */
+const TOUCH_MIN_INTERVAL_MS = 2_000;
 
 const SEED_MARKDOWN = `# Product Roadmap
 
@@ -45,6 +54,25 @@ const documentPublicValidator = v.object({
   createdAt: v.number(),
 });
 
+const agentHeartbeatValidator = v.object({
+  name: v.string(),
+  lastSeenAt: v.number(),
+});
+
+const documentListItemValidator = v.object({
+  _id: v.id("documents"),
+  _creationTime: v.number(),
+  title: v.string(),
+  createdAt: v.number(),
+  isYours: v.boolean(),
+  ownerName: v.union(v.string(), v.null()),
+  lastEditedAt: v.optional(v.number()),
+  lastEditorName: v.optional(v.string()),
+  lastEditorIsAgent: v.optional(v.boolean()),
+  /** Non-revoked agents with raw timestamps — client filters liveness. */
+  agentHeartbeats: v.array(agentHeartbeatValidator),
+});
+
 function toPublicDoc(doc: Doc<"documents">) {
   return {
     _id: doc._id,
@@ -52,6 +80,35 @@ function toPublicDoc(doc: Doc<"documents">) {
     title: doc.title,
     createdAt: doc.createdAt,
   };
+}
+
+/** Resolve display name for a `user:<id>` owner; `local:` stays null for the UI. */
+async function resolveOwnerName(
+  ctx: QueryCtx,
+  ownerId: string | undefined,
+): Promise<string | null> {
+  if (!ownerId || ownerId.startsWith("local:")) {
+    return null;
+  }
+  if (!ownerId.startsWith("user:")) {
+    return null;
+  }
+  const userId = ownerId.slice("user:".length) as Id<"users">;
+  const user = await ctx.db.get("users", userId);
+  return user?.name ?? null;
+}
+
+async function agentHeartbeatsForDoc(
+  ctx: QueryCtx,
+  docId: Id<"documents">,
+): Promise<Array<{ name: string; lastSeenAt: number }>> {
+  const agents = await ctx.db
+    .query("agents")
+    .withIndex("by_doc", (q) => q.eq("docId", docId))
+    .collect();
+  return agents
+    .filter((agent) => !agent.revoked)
+    .map((agent) => ({ name: agent.name, lastSeenAt: agent.lastSeenAt }));
 }
 
 async function claimLocalIdentity(
@@ -178,7 +235,7 @@ export const list = query({
   args: {
     localOwnerId: v.optional(v.string()),
   },
-  returns: v.array(documentPublicValidator),
+  returns: v.array(documentListItemValidator),
   handler: async (ctx, args) => {
     const byId = new Map<string, Doc<"documents">>();
     const userId = await getAuthUserId(ctx);
@@ -219,10 +276,85 @@ export const list = query({
       }
     }
 
-    return [...byId.values()]
-      .sort((a, b) => b.createdAt - a.createdAt)
-      .slice(0, 50)
-      .map(toPublicDoc);
+    const docs = [...byId.values()]
+      .sort(
+        (a, b) =>
+          (b.lastEditedAt ?? b.createdAt) - (a.lastEditedAt ?? a.createdAt),
+      )
+      .slice(0, 50);
+
+    return await Promise.all(
+      docs.map(async (doc) => {
+        // Legacy ownerless docs are on every viewer's list — do not broadcast
+        // who is editing or which agents are live (same rationale as skipping
+        // human presence rooms on the index).
+        const exposeActivity = doc.ownerId !== undefined;
+        const [ownerName, agentHeartbeats] = await Promise.all([
+          resolveOwnerName(ctx, doc.ownerId),
+          exposeActivity
+            ? agentHeartbeatsForDoc(ctx, doc._id)
+            : Promise.resolve([]),
+        ]);
+        return {
+          ...toPublicDoc(doc),
+          isYours: !!doc.ownerId && subjectIds.includes(doc.ownerId),
+          ownerName,
+          lastEditedAt: exposeActivity ? doc.lastEditedAt : undefined,
+          lastEditorName: exposeActivity ? doc.lastEditorName : undefined,
+          lastEditorIsAgent: exposeActivity ? doc.lastEditorIsAgent : undefined,
+          agentHeartbeats,
+        };
+      }),
+    );
+  },
+});
+
+/**
+ * Human last-edit signal for the docs index. Body editing stays open-by-link
+ * (same as prosemirror sync / documents.get). Display name is derived server-
+ * side (auth profile or guest label from `localOwnerId`) — never client-
+ * supplied. Clients cannot claim `isAgent`.
+ */
+export const touch = mutation({
+  args: {
+    docId: v.id("documents"),
+    localOwnerId: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const doc = await ctx.db.get("documents", args.docId);
+    if (!doc) {
+      throw new Error("Document not found");
+    }
+
+    const userId = await getAuthUserId(ctx);
+    let name = "";
+    if (userId) {
+      const user = await ctx.db.get("users", userId);
+      name = normalizeEditorName(user?.name ?? "");
+    }
+    if (!name) {
+      if (!args.localOwnerId || !isLocalOwnerId(args.localOwnerId)) {
+        return null;
+      }
+      const ownerKey = args.localOwnerId.slice("local:".length);
+      name = normalizeEditorName(guestDisplayName(ownerKey));
+    }
+    if (!name || name === "Guest") {
+      return null;
+    }
+
+    // Always throttle — including after agent edits — so touch spam cannot
+    // thrash every viewer's list by alternating identities.
+    if (
+      doc.lastEditedAt !== undefined &&
+      Date.now() - doc.lastEditedAt < TOUCH_MIN_INTERVAL_MS
+    ) {
+      return null;
+    }
+
+    await recordLastEdit(ctx, args.docId, { name, isAgent: false });
+    return null;
   },
 });
 

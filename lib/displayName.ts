@@ -36,7 +36,8 @@ function hashKey(key: string): number {
   return hash >>> 0;
 }
 
-function guestDisplayName(ownerKey: string | null): string {
+/** Stable color-word guest label from the anonymous cookie key (server + client). */
+export function guestDisplayName(ownerKey: string | null): string {
   if (!ownerKey) return "Guest";
   const color = GUEST_COLORS[hashKey(ownerKey) % GUEST_COLORS.length];
   return color ? `Guest ${color}` : "Guest";

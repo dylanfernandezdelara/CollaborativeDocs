@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { TextAction, textActionClassName } from "@/components/TextAction";
 import {
   Popover,
   PopoverContent,
@@ -11,7 +11,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { api } from "@/convex/_generated/api";
 import type { Doc, Id } from "@/convex/_generated/dataModel";
 import { useMutation } from "convex/react";
-import { XIcon } from "lucide-react";
 import { useEffect, useState } from "react";
 
 type Agent = {
@@ -31,7 +30,7 @@ type CommentsPanelProps = {
   onClearCompose: () => void;
 };
 
-function SendToAgentButton({
+function SendToAgentAction({
   commentId,
   onlineAgents,
 }: {
@@ -46,46 +45,33 @@ function SendToAgentButton({
   if (onlineAgents.length === 1) {
     const agent = onlineAgents[0]!;
     return (
-      <Button
-        variant="ghost"
-        size="sm"
-        className="h-6 px-2 text-[12px] text-ink-secondary"
+      <TextAction
+        variant="secondary"
+        className="text-[12px]"
         onClick={() => void sendToAgent({ commentId, agentId: agent._id })}
       >
         Send to agent
-      </Button>
+      </TextAction>
     );
   }
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="sm"
-            className="h-6 px-2 text-[12px] text-ink-secondary"
-          />
-        }
-      >
+      <PopoverTrigger className={textActionClassName("secondary", "text-[12px]")}>
         Send to agent
       </PopoverTrigger>
-      <PopoverContent className="w-44 p-1">
+      <PopoverContent className="w-44 rounded-[8px] p-1">
         {onlineAgents.map((agent) => (
           <button
             key={agent._id}
             type="button"
-            className="flex w-full items-center gap-2 rounded-md px-2 py-1.5 text-left text-[13px] hover:bg-muted"
+            className="flex w-full items-center rounded-[6px] px-2 py-1.5 text-left text-[13px] tracking-[-0.15px] text-ink-secondary hover:bg-surface-hover hover:text-ink"
             onClick={() => {
               void sendToAgent({ commentId, agentId: agent._id });
               setOpen(false);
             }}
           >
-            <span
-              className="size-2 shrink-0 rounded-full"
-              style={{ backgroundColor: agent.color }}
-            />
-            {agent.name}
+            {agent.name} (agent)
           </button>
         ))}
       </PopoverContent>
@@ -178,14 +164,13 @@ export function CommentsPanel({
     >
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-ink/10 px-4">
         <h2 className="text-[14px] font-medium text-ink">Comments</h2>
-        <Button
-          variant="ghost"
-          size="icon-sm"
+        <TextAction
+          variant="secondary"
           onClick={onClose}
           aria-label="Close comments"
         >
-          <XIcon className="size-4 text-ink-tertiary" />
-        </Button>
+          Close
+        </TextAction>
       </div>
 
       {composeAnchor !== null && (
@@ -199,28 +184,25 @@ export function CommentsPanel({
             value={composeText}
             onChange={(e) => setComposeText(e.target.value)}
             placeholder="Write a comment…"
-            className="mt-2 min-h-16 text-[16px] sm:text-[13px]"
+            className="mt-2 min-h-16 rounded-[6px] text-[16px] sm:text-[13px]"
           />
-          <div className="mt-2 flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              className="rounded-full text-[13px]"
+          <div className="mt-3 flex flex-wrap items-center gap-3">
+            <TextAction
+              variant="primary"
               disabled={!composeText.trim()}
               onClick={() => void submitCompose()}
             >
               Add comment
-            </Button>
-            <Button
-              variant="ghost"
-              size="sm"
-              className="text-[13px] text-ink-secondary"
+            </TextAction>
+            <TextAction
+              variant="secondary"
               onClick={() => {
                 setComposeText("");
                 onClearCompose();
               }}
             >
               Cancel
-            </Button>
+            </TextAction>
           </div>
         </div>
       )}
@@ -272,19 +254,18 @@ export function CommentsPanel({
                         }))
                       }
                       placeholder="Reply…"
-                      className="min-h-12 text-[16px] sm:text-[13px]"
+                      className="min-h-12 rounded-[6px] text-[16px] sm:text-[13px]"
                     />
-                    <div className="flex flex-wrap items-center gap-1">
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="h-6 px-2 text-[12px] text-ink-secondary"
+                    <div className="flex flex-wrap items-center gap-3">
+                      <TextAction
+                        variant="secondary"
+                        className="text-[12px]"
                         disabled={!(replyTexts[comment._id] ?? "").trim()}
                         onClick={() => void submitReply(comment._id)}
                       >
                         Reply
-                      </Button>
-                      <SendToAgentButton
+                      </TextAction>
+                      <SendToAgentAction
                         commentId={comment._id}
                         onlineAgents={onlineAgents}
                       />

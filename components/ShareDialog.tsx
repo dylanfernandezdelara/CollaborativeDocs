@@ -1,6 +1,6 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
+import { TextAction, textActionClassName } from "@/components/TextAction";
 import {
   Dialog,
   DialogContent,
@@ -47,10 +47,9 @@ type AccessRow =
       id: Id<"agents">;
       name: string;
       status: "active" | "revoked";
-      color: string;
     };
 
-function SegmentedControl({
+function InviteKindTabs({
   value,
   onChange,
 }: {
@@ -66,7 +65,7 @@ function SegmentedControl({
     <div
       role="tablist"
       aria-label="Invite type"
-      className="inline-flex rounded-lg border border-ink/10 bg-surface-hover p-0.5"
+      className="flex items-center gap-3"
     >
       {options.map((option) => {
         const selected = value === option.id;
@@ -79,8 +78,8 @@ function SegmentedControl({
             onClick={() => onChange(option.id)}
             className={
               selected
-                ? "rounded-md bg-page-elevated px-3 py-1 text-[12px] font-medium text-ink shadow-sm"
-                : "rounded-md px-3 py-1 text-[12px] text-ink-secondary hover:text-ink"
+                ? textActionClassName("primary")
+                : "cursor-pointer border-0 bg-transparent p-0 text-[13px] font-medium tracking-[-0.15px] text-ink-tertiary transition-colors duration-200 ease-out hover:text-ink-secondary"
             }
           >
             {option.label}
@@ -106,7 +105,7 @@ function CopyableBlock({
     <button
       type="button"
       onClick={onCopy}
-      className="group flex w-full cursor-pointer items-start gap-3 rounded-lg border border-ink/10 bg-page p-3 text-left transition-colors hover:border-ink/20 hover:bg-surface-hover"
+      className="group flex w-full cursor-pointer items-start gap-3 rounded-[8px] border border-ink/10 bg-page p-3 text-left transition-colors hover:border-ink/20 hover:bg-surface-hover"
     >
       {multiline ? (
         <pre className="min-w-0 flex-1 whitespace-pre-wrap break-all text-[12px] leading-relaxed text-ink-secondary">
@@ -117,18 +116,18 @@ function CopyableBlock({
           {text}
         </code>
       )}
-      <span className="flex size-8 shrink-0 items-center justify-center rounded-md border border-ink/10 bg-page-elevated text-ink-secondary group-hover:text-ink">
+      <span className="flex size-8 shrink-0 items-center justify-center rounded-[6px] border border-ink/10 bg-page-elevated text-ink-secondary group-hover:text-ink">
         {copied ? <Check className="size-4" /> : <Copy className="size-4" />}
       </span>
     </button>
   );
 }
 
-function statusLabel(row: AccessRow): string {
+function statusLabel(row: AccessRow): string | null {
   if (row.kind === "person") {
     return row.status;
   }
-  return row.status === "revoked" ? "agent · revoked" : "agent";
+  return row.status === "revoked" ? "revoked" : null;
 }
 
 export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
@@ -244,7 +243,6 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
       id: agent._id,
       name: agent.name,
       status: agent.revoked ? "revoked" : "active",
-      color: agent.color,
     });
   }
 
@@ -322,27 +320,26 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
           <section>
             <div className="flex flex-wrap items-center justify-between gap-3">
               <h3 className="text-[13px] font-medium text-ink">Invite</h3>
-              <SegmentedControl
+              <InviteKindTabs
                 value={inviteKind}
                 onChange={handleKindChange}
               />
             </div>
 
-            <div className="mt-2 flex w-full min-w-0 flex-col gap-2 sm:flex-row">
+            <div className="mt-3 flex w-full min-w-0 flex-col items-start gap-3 sm:flex-row sm:items-center">
               <Input
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Name"
-                className="h-8 min-w-0 flex-1 text-[16px] sm:text-[13px]"
+                className="h-8 min-w-0 flex-1 rounded-[6px] text-[16px] sm:text-[13px]"
               />
-              <Button
+              <TextAction
+                variant="primary"
                 onClick={() => void handleCreateInvite()}
                 disabled={!name.trim() || creating}
-                className="w-full shrink-0 rounded-full text-[13px] sm:w-auto"
-                size="sm"
               >
                 {creating ? "Creating…" : "Create invite"}
-              </Button>
+              </TextAction>
             </div>
 
             {invitePayload && (
@@ -403,51 +400,49 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
               </p>
             ) : (
               <ul className="mt-2 divide-y divide-ink/8">
-                {accessRows.map((row) => (
-                  <li
-                    key={row.key}
-                    className="flex items-center justify-between gap-2 py-2"
-                  >
-                    <div className="flex min-w-0 items-center gap-2">
-                      {row.kind === "agent" ? (
-                        <span
-                          className="size-2 shrink-0 rounded-full"
-                          style={{ backgroundColor: row.color }}
-                        />
-                      ) : (
-                        <span className="size-2 shrink-0 rounded-full bg-ink-tertiary/40" />
+                {accessRows.map((row) => {
+                  const status = statusLabel(row);
+                  return (
+                    <li
+                      key={row.key}
+                      className="flex items-center justify-between gap-3 py-2"
+                    >
+                      <div className="flex min-w-0 items-baseline gap-2">
+                        <span className="truncate text-[13px] tracking-[-0.15px] text-ink">
+                          {row.kind === "agent"
+                            ? `${row.name} (agent)`
+                            : row.name}
+                        </span>
+                        {status ? (
+                          <span className="shrink-0 text-[12px] tracking-[-0.15px] text-ink-tertiary">
+                            {status}
+                          </span>
+                        ) : null}
+                      </div>
+                      {row.status !== "revoked" && (
+                        <TextAction
+                          variant="secondary"
+                          className="shrink-0 text-[12px]"
+                          onClick={() => {
+                            if (row.kind === "person") {
+                              void revokeHuman({
+                                collaboratorId: row.id,
+                                localOwnerId: localId,
+                              });
+                            } else {
+                              void revokeAgent({
+                                agentId: row.id,
+                                localOwnerId: localId,
+                              });
+                            }
+                          }}
+                        >
+                          Revoke
+                        </TextAction>
                       )}
-                      <span className="truncate text-[13px] text-ink">
-                        {row.name}
-                      </span>
-                      <span className="shrink-0 text-[12px] text-ink-tertiary">
-                        {statusLabel(row)}
-                      </span>
-                    </div>
-                    {row.status !== "revoked" && (
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        className="shrink-0 text-[12px] text-ink-secondary"
-                        onClick={() => {
-                          if (row.kind === "person") {
-                            void revokeHuman({
-                              collaboratorId: row.id,
-                              localOwnerId: localId,
-                            });
-                          } else {
-                            void revokeAgent({
-                              agentId: row.id,
-                              localOwnerId: localId,
-                            });
-                          }
-                        }}
-                      >
-                        Revoke
-                      </Button>
-                    )}
-                  </li>
-                ))}
+                    </li>
+                  );
+                })}
               </ul>
             )}
           </section>

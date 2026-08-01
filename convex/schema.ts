@@ -9,6 +9,10 @@ export default defineSchema({
     createdAt: v.number(),
     /** `local:<cookie>` for anonymous owners, `user:<id>` after GitHub sign-in. */
     ownerId: v.optional(v.string()),
+    /** Denormalized last-edit signal for the docs index (humans + agents). */
+    lastEditedAt: v.optional(v.number()),
+    lastEditorName: v.optional(v.string()),
+    lastEditorIsAgent: v.optional(v.boolean()),
   }).index("by_owner", ["ownerId"]),
   /** Pins each anonymous device identity to the first account that claims it. */
   identityClaims: defineTable({

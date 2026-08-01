@@ -1,81 +1,131 @@
 # Design Guidance
 
 Simple, quiet UI. Prefer whitespace and hierarchy over decoration.
+Influence: [benji.org](https://benji.org) — text does the work, actions are
+words, chrome only when it helps a task.
+
+Decided Aug 2026 via canvas exploration (see `canvases/design-composites.canvas.tsx`
+for the reference composite: "Quiet Index · dated" × "Bone · Olive").
 
 ## Principles
 
-- **Text-first.** Content and type do most of the work. Avoid chrome unless it helps a task.
+- **Text-first.** Content and type do most of the work. No buttons, no pills,
+  no badges — actions are underlined text phrases.
 - **One hierarchy.** Primary / secondary / tertiary — nothing else.
-- **Restrained surfaces.** Light backgrounds, soft borders, no heavy shadows or glow.
-- **Small type, clear structure.** Dense but calm — like a well-set personal site, not a dashboard.
+- **Neutral text, one accent.** All text is neutral ink/gray. The olive accent
+  appears in exactly one place per view: the primary action's underline
+  (and the active nav item's underline).
+- **Small type, clear structure.** Dense but calm — like a well-set personal
+  site, not a dashboard.
+- **No terminal aesthetics.** No monospace, no letter-spaced all-caps labels.
+  Dates are written as words ("Aug 1", "yesterday", "3d").
 
 ## Type
 
 | Token | Value |
 | --- | --- |
-| Family | SF Pro (system fallback: `-apple-system, BlinkMacSystemFont, system-ui`) |
+| Family | SF Pro (system fallback: `-apple-system, BlinkMacSystemFont, system-ui`) — everywhere, including dates and metadata |
 | Weights | Regular (400), Medium (500) |
 | Letter spacing | `-0.15px` |
-| Sizes | `12px`, `13px`, `14px`, `24px` only |
+| Sizes | `11px`, `12px`, `13px`, `14px`, `21px` |
 
 **Usage**
 
-- `24px` — page titles / hero names
-- `14px` — body, primary labels, nav
-- `13px` — secondary body / list meta when 14 feels heavy
-- `12px` — timestamps, captions, tertiary labels
+- `21px` — page titles (medium weight)
+- `14px` — section headers, nav
+- `13px` — body, doc titles, actions
+- `12px` — secondary labels
+- `11px` — dates, owner names, typing lines, captions
 
-## Color
+## Color — Bone · Olive
 
-Warm paper palette aligned with [dylanfdl.com](https://www.dylanfdl.com) — cream surfaces, cool grey ink, muted blue primary. No teal/sea-glass.
+Warm bone paper, near-black ink, dry olive accent. No purple, no teal,
+no status-LED green.
 
 | Role | Hex |
 | --- | --- |
-| Primary text | `#030303` |
-| Secondary text | `#374151` |
-| Tertiary text / muted icons | `#6B7280` |
-| Background | paper `#FFFEF8` (soft warm wash OK) |
-| Surface / elevated | `#FAF8F0` |
-| Surface / hover | `#F5F2E8` |
-| Primary action | muted blue `#5F5FAF` |
-| Borders | paper edge `#F0EDE0`, or ink at low opacity |
+| Background | `#FBFAF4` |
+| Surface / hover | `#F1EFE4` |
+| Primary text (ink) | `#1C1B17` |
+| Secondary text | `#57544A` |
+| Tertiary text / metadata | `#948F7D` |
+| Borders / hairlines | `#E9E6D8` |
+| Accent (olive) | `#6B7233` |
 
-Links inherit text color; use weight or underline on hover. Keep accent color sparse — primary buttons and subtle page atmosphere only.
+Accent dosage is deliberately sparse: primary-action underline and active-nav
+underline only. Never colored phrases, never colored icons, never row fills.
 
-**Implementation:** these roles are CSS variables in `app/globals.css` and Tailwind colors `ink`, `ink-secondary`, `ink-tertiary`, `page`, `page-elevated`, `surface-hover`, plus shadcn `primary`. Prefer those utilities over hardcoded hex.
+## Documents index — "Quiet Index · dated"
+
+- Centered column (~640px prose width).
+- Header: "Documents" (14/500) with a **1.5px ink rule** underneath and the
+  doc count right-aligned in tertiary.
+- Rows: date in a fixed 64px tertiary column · title (13px; medium when live)
+  · owner's name right-aligned in tertiary.
+- Footer actions as text: primary ("New document") underlined 1.5px in olive;
+  secondary ("Shared with me") underlined 1px in tertiary gray.
+
+## Authorship & presence
+
+Structural fact: **only humans create documents.** A name in the owner
+position is always a person and never needs a qualifier.
+
+- **Owner** — always visible, right edge of every row, tertiary gray. Never
+  displaced by live activity.
+- **Live editing** — live rows add one line beneath the title, indented to
+  the text column: an animated spinner + gray italic sentence, e.g.
+  `⠋ Scout (agent) is typing · 2 others in the doc`.
+- **Index signal sources** — typing comes from denormalized last-edit
+  (`lastEditedAt` / editor name derived server-side). “Others in the doc”
+  on the index counts live agents only (client-filtered `lastSeenAt` from
+  `agentHeartbeats`). The index does **not** subscribe to human presence
+  rooms (avoids list-query churn on every heartbeat). Legacy ownerless docs
+  omit last-edit and agent heartbeats on the list entirely so they do not
+  broadcast who is editing to every visitor. Full human presence stays on
+  the document page avatar stack. List order matches the date column
+  (`lastEditedAt ?? createdAt`).
+- **Spinner** — the `dots` spinner from
+  [cli-spinners](https://github.com/sindresorhus/cli-spinners)
+  (frames `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏`, 80ms), rendered at ~11px in secondary gray.
+  Motion is the live signal; it carries no color.
+- **Agents** — always named with the literal word "agent" in plain gray text:
+  `Scout (agent)`. Agents never get avatars, faces, colored labels, or
+  invented symbols.
+- **No legends.** If a presence treatment needs explaining, it's wrong.
+- Past agent edits are not surfaced on the index.
 
 ## Icons
 
-| Context | Size |
-| --- | --- |
-| Navigation | `14px` |
-| Cards | `20px` |
-
-Stroke weight should match surrounding type. Prefer monochrome at the tertiary/secondary colors above.
+Avoid icons where a word works. When needed: monochrome, stroke matching
+surrounding type, `14px` in nav contexts.
 
 ## Radius & spacing
 
 | Element | Radius |
 | --- | --- |
-| Navigation controls | `8px` |
-| Cards | `16px` |
-| Primary CTAs | pill (`9999px`) |
+| Cards / dialogs | `8–10px` |
+| Small controls | `6px` |
+| Pills | **never** |
 
-Keep padding tight and consistent. Favor `8 / 12 / 16 / 24` spacing steps. Cards can sit in a simple grid; don’t nest cards inside cards.
+Favor `8 / 12 / 16 / 24` spacing steps. Hairline separators (`#E9E6D8`)
+between rows; a heavier ink rule only under page/section headers.
 
 ## Layout
 
 - Prose width: `640px`
-- Grid / page max-width: `900px`
+- Page max-width: `900px`
 - Generous top padding; calm vertical rhythm
-- Filters/tabs: compact segmented control, not oversized pills
 
 ## Motion
 
-Short and quiet when used (`200–300ms`, ease-out). Prefer opacity/transform over bouncing or springy UI.
+- The dots typing spinner (80ms frames) is the primary motion in the app.
+- Everything else: short and quiet (`200–300ms`, ease-out), opacity/transform
+  only. No bounce, no glow, no shimmer washes.
 
-## Do / Don’t
+## Do / Don't
 
-**Do:** warm paper cream, SF Pro, small type scale, clear title → body → meta hierarchy.
+**Do:** bone paper, SF Pro, small type scale, underlined text actions, the
+typing line with the dots spinner, owner always visible.
 
-**Don’t:** teal/sea-glass washes, purple gradients, heavy card stacks, large display fonts, competing accents, decorative badges on media.
+**Don't:** buttons and pills, colored text phrases, status-LED green dots,
+monospace or all-caps labels, avatars for agents, legends, purple anything.

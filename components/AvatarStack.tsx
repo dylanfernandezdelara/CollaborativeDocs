@@ -26,48 +26,21 @@ function getInitials(name: string): string {
     .toUpperCase();
 }
 
-function PresenceAvatar({
-  name,
-  tooltip,
-  backgroundColor,
-  showDot,
-}: {
-  name: string;
-  tooltip: string;
-  backgroundColor?: string;
-  showDot?: boolean;
-}) {
+function HumanAvatar({ name }: { name: string }) {
   return (
     <Tooltip>
       <TooltipTrigger
         render={
           <div className="relative">
-            <Avatar
-              size="sm"
-              className="size-6 text-[10px]"
-              style={
-                backgroundColor
-                  ? { backgroundColor, color: "#fff" }
-                  : undefined
-              }
-            >
-              <AvatarFallback
-                className={
-                  backgroundColor
-                    ? "bg-transparent text-[10px] text-white"
-                    : "text-[10px] text-ink-secondary"
-                }
-              >
+            <Avatar size="sm" className="size-6 text-[10px]">
+              <AvatarFallback className="text-[10px] text-ink-secondary">
                 {getInitials(name)}
               </AvatarFallback>
             </Avatar>
-            {showDot && (
-              <span className="absolute -right-0.5 -bottom-0.5 size-2 rounded-full border border-page bg-[#22c55e]" />
-            )}
           </div>
         }
       />
-      <TooltipContent>{tooltip}</TooltipContent>
+      <TooltipContent>{name}</TooltipContent>
     </Tooltip>
   );
 }
@@ -88,22 +61,21 @@ export function AvatarStack({
 
   return (
     <TooltipProvider delay={200}>
-      <div className="flex shrink-0 -space-x-1.5">
-        {onlineHumans.map((human) => (
-          <PresenceAvatar
-            key={human.userId}
-            name={human.userId}
-            tooltip={human.userId}
-          />
-        ))}
+      <div className="flex shrink-0 items-center gap-2">
+        {onlineHumans.length > 0 ? (
+          <div className="flex shrink-0 -space-x-1.5">
+            {onlineHumans.map((human) => (
+              <HumanAvatar key={human.userId} name={human.userId} />
+            ))}
+          </div>
+        ) : null}
         {onlineAgents.map((agent) => (
-          <PresenceAvatar
+          <span
             key={agent._id}
-            name={agent.name}
-            tooltip={`${agent.name} (agent)`}
-            backgroundColor={agent.color}
-            showDot
-          />
+            className="text-[11px] tracking-[-0.15px] text-ink-tertiary"
+          >
+            {agent.name} (agent)
+          </span>
         ))}
       </div>
     </TooltipProvider>

@@ -7,6 +7,7 @@ import { v } from "convex/values";
 import type { Doc } from "./_generated/dataModel";
 import type { MutationCtx } from "./_generated/server";
 import { getAgentByToken } from "./lib/agentAuth";
+import { recordLastEdit } from "./lib/lastEdit";
 import { editorExtensions } from "../lib/editorExtensions";
 import {
   markdownToPmNodes,
@@ -361,9 +362,14 @@ export const applyWrite = mutation({
       schema,
     );
 
+    const editedAt = Date.now();
     await ctx.db.patch("agents", agent._id, {
       lastSeenVersion: newVersion,
-      lastSeenAt: Date.now(),
+      lastSeenAt: editedAt,
+    });
+    await recordLastEdit(ctx, agent.docId, {
+      name: agent.name,
+      isAgent: true,
     });
 
     const refreshedAgent = (await ctx.db.get("agents", agent._id))!;

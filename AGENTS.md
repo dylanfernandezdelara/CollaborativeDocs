@@ -22,6 +22,7 @@ Configured via `.cursor/environment.json`. Commands live in `package.json` — p
 - Do not commit `.env.local` or anything under `.convex/`.
 - UI design tokens live in `DESIGN.md` — follow them for product UI work.
 - Read Next.js docs under `node_modules/next/dist/docs/` before changing App Router / Next APIs.
+- **Browser validation:** always use **Cursor Browser** (`cursor-ide-browser` MCP: navigate, snapshot, screenshot, click, type). Never use Playwright, `playwright-cli`, or other external browser automation for UI checks in this repo.
 
 ### Auth configuration (per Convex deployment)
 
