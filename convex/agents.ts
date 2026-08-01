@@ -2,15 +2,16 @@ import { internalQuery, mutation, query } from "./_generated/server";
 import { v } from "convex/values";
 import { assertCanManageDoc } from "./lib/access";
 
+// Paper-palette accents (no teal/sea-glass — see DESIGN.md).
 const AGENT_COLORS = [
-  "#6366f1",
-  "#ec4899",
-  "#14b8a6",
-  "#f59e0b",
-  "#8b5cf6",
-  "#ef4444",
-  "#22c55e",
-  "#0ea5e9",
+  "#5f5faf",
+  "#af5f87",
+  "#af875f",
+  "#5f875f",
+  "#875faf",
+  "#af5f5f",
+  "#5f87af",
+  "#87875f",
 ];
 
 export const mint = mutation({

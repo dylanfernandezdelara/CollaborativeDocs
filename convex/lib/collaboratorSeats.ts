@@ -82,13 +82,15 @@ export async function rebindSeat(
     existing.sort((a, b) => a.createdAt - b.createdAt)[0]!;
 
   if (!seat.revoked) {
+    // Prefer the acceptor's profile name, else the source seat's label when
+    // it is fresher (migrations always; invite accepts when reviving a
+    // revoked seat), else keep the existing seat name.
+    const sourceNameWins = options.retire === "delete" || keeper.revoked;
     await ctx.db.patch("collaborators", keeper._id, {
       revoked: false,
-      // Migrations carry the source seat's name forward; invite accepts only
-      // rename when the acceptor supplied a display name.
       name:
         options.displayName ??
-        (options.retire === "delete" ? seat.name : keeper.name),
+        ((sourceNameWins ? seat.name : keeper.name) || keeper.name),
       joinedAt: keeper.joinedAt ?? seat.joinedAt ?? Date.now(),
     });
   }

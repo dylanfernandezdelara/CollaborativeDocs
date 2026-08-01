@@ -19,7 +19,7 @@ import {
 import { buildHumanInviteUrl } from "@/lib/humanInvite";
 import { localOwnerId as toLocalOwnerId, useOwnerKey } from "@/lib/ownerKey";
 import { Check, ChevronDown, ChevronRight, Copy } from "lucide-react";
-import { useState } from "react";
+import { useRef, useState } from "react";
 
 type ShareDialogProps = {
   docId: Id<"documents">;
@@ -150,6 +150,9 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
   const [minted, setMinted] = useState<MintedInvite | null>(null);
   const [manualOpen, setManualOpen] = useState(false);
   const [copied, setCopied] = useState<"doc" | "invite" | "json" | null>(null);
+  const [creating, setCreating] = useState(false);
+  const creatingRef = useRef(false);
+  const accessLoading = open && (people === undefined || agents === undefined);
 
   const origin =
     typeof window !== "undefined" ? window.location.origin : "";
@@ -171,11 +174,14 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
       setMinted(null);
       setManualOpen(false);
       setCopied(null);
+      creatingRef.current = false;
+      setCreating(false);
     }
     onOpenChange(nextOpen);
   }
 
   function handleKindChange(next: InviteKind) {
+    if (creatingRef.current) return;
     setInviteKind(next);
     setName(defaultNameFor(next, agents?.length ?? 0));
     setMinted(null);
@@ -244,34 +250,41 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
 
   async function handleCreateInvite() {
     const trimmed = name.trim();
-    if (!trimmed) return;
+    if (!trimmed || creatingRef.current) return;
 
-    if (inviteKind === "person") {
-      const result = await mintHuman({
+    creatingRef.current = true;
+    setCreating(true);
+    try {
+      if (inviteKind === "person") {
+        const result = await mintHuman({
+          docId,
+          name: trimmed,
+          localOwnerId: localId,
+        });
+        setMinted({
+          kind: "person",
+          id: result.collaboratorId,
+          token: result.token,
+          name: trimmed,
+        });
+        return;
+      }
+
+      const result = await mintAgent({
         docId,
         name: trimmed,
         localOwnerId: localId,
       });
       setMinted({
-        kind: "person",
-        id: result.collaboratorId,
+        kind: "agent",
+        id: result.agentId,
         token: result.token,
         name: trimmed,
       });
-      return;
+    } finally {
+      creatingRef.current = false;
+      setCreating(false);
     }
-
-    const result = await mintAgent({
-      docId,
-      name: trimmed,
-      localOwnerId: localId,
-    });
-    setMinted({
-      kind: "agent",
-      id: result.agentId,
-      token: result.token,
-      name: trimmed,
-    });
   }
 
   async function copyText(text: string, kind: "doc" | "invite" | "json") {
@@ -324,11 +337,11 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
               />
               <Button
                 onClick={() => void handleCreateInvite()}
-                disabled={!name.trim()}
+                disabled={!name.trim() || creating}
                 className="w-full shrink-0 rounded-full text-[13px] sm:w-auto"
                 size="sm"
               >
-                Create invite
+                {creating ? "Creating…" : "Create invite"}
               </Button>
             </div>
 
@@ -382,7 +395,9 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
 
           <section>
             <h3 className="text-[13px] font-medium text-ink">On this doc</h3>
-            {!accessRows.length ? (
+            {accessLoading ? (
+              <p className="mt-2 text-[12px] text-ink-tertiary">Loading…</p>
+            ) : !accessRows.length ? (
               <p className="mt-2 text-[12px] text-ink-tertiary">
                 No one invited yet.
               </p>
