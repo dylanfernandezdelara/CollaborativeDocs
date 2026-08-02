@@ -1,9 +1,11 @@
 "use client";
 
 import { AuthNav } from "@/components/AuthControls";
+import { SwipeDeleteRow } from "@/components/SwipeDeleteRow";
 import { TextAction } from "@/components/TextAction";
 import { TypingLine, type TypingLineProps } from "@/components/TypingIndicator";
 import { api } from "@/convex/_generated/api";
+import type { Id } from "@/convex/_generated/dataModel";
 import { localOwnerId, useOwnerKey } from "@/lib/ownerKey";
 import {
   LIVE_AGENT_MS,
@@ -98,8 +100,12 @@ export default function HomePage() {
     !loaded || !localId ? "skip" : { localOwnerId: localId },
   );
   const createDoc = useMutation(api.documents.create);
+  const removeDoc = useMutation(api.documents.remove);
   const [creating, setCreating] = useState(false);
   const [now, setNow] = useState(() => Date.now());
+  const [openSwipeId, setOpenSwipeId] = useState<Id<"documents"> | null>(null);
+  const [deletingId, setDeletingId] = useState<Id<"documents"> | null>(null);
+  const [deleteError, setDeleteError] = useState<string | null>(null);
 
   useEffect(() => {
     const id = window.setInterval(() => setNow(Date.now()), 1000);
@@ -117,6 +123,22 @@ export default function HomePage() {
       router.push(`/d/${docId}`);
     } finally {
       setCreating(false);
+    }
+  }
+
+  async function handleDelete(docId: Id<"documents">) {
+    if (!localId || deletingId) return;
+    setDeletingId(docId);
+    setDeleteError(null);
+    try {
+      await removeDoc({ docId, localOwnerId: localId });
+      setOpenSwipeId(null);
+    } catch (error) {
+      setDeleteError(
+        error instanceof Error ? error.message : "Couldn’t delete document",
+      );
+    } finally {
+      setDeletingId(null);
     }
   }
 
@@ -157,32 +179,50 @@ export default function HomePage() {
               );
               return (
                 <li key={doc._id} className="border-b border-border">
-                  <Link
-                    href={`/d/${doc._id}`}
-                    className="grid grid-cols-[4rem_minmax(0,1fr)_auto] items-baseline gap-x-3 py-1.5 transition-opacity duration-200 ease-out hover:opacity-80"
+                  <SwipeDeleteRow
+                    enabled={doc.isYours}
+                    open={openSwipeId === doc._id}
+                    onOpenChange={(open) =>
+                      setOpenSwipeId(open ? doc._id : null)
+                    }
+                    onDelete={() => void handleDelete(doc._id)}
+                    deleting={deletingId === doc._id}
                   >
-                    <span className="text-[11px] text-ink-tertiary">{when}</span>
-                    <span
-                      className={`min-w-0 truncate text-[13px] text-ink ${
-                        activity ? "font-medium" : "font-normal"
-                      }`}
+                    <Link
+                      href={`/d/${doc._id}`}
+                      className="grid grid-cols-[4rem_minmax(0,1fr)_auto] items-baseline gap-x-3 py-1.5 transition-opacity duration-200 ease-out hover:opacity-80"
                     >
-                      {doc.title}
-                    </span>
-                    <span className="pl-3 text-[11.5px] text-ink-tertiary">
-                      {ownerLabel(doc.isYours, doc.ownerName)}
-                    </span>
-                    {activity ? (
-                      <div className="col-start-2 col-span-2 min-w-0">
-                        <TypingLine {...activity} />
-                      </div>
-                    ) : null}
-                  </Link>
+                      <span className="text-[11px] text-ink-tertiary">
+                        {when}
+                      </span>
+                      <span
+                        className={`min-w-0 truncate text-[13px] text-ink ${
+                          activity ? "font-medium" : "font-normal"
+                        }`}
+                      >
+                        {doc.title}
+                      </span>
+                      <span className="pl-3 text-[11.5px] text-ink-tertiary">
+                        {ownerLabel(doc.isYours, doc.ownerName)}
+                      </span>
+                      {activity ? (
+                        <div className="col-start-2 col-span-2 min-w-0">
+                          <TypingLine {...activity} />
+                        </div>
+                      ) : null}
+                    </Link>
+                  </SwipeDeleteRow>
                 </li>
               );
             })}
           </ul>
         )}
+
+        {deleteError ? (
+          <p className="mt-3 text-[12px] text-destructive" role="alert">
+            {deleteError}
+          </p>
+        ) : null}
 
         <div className="mt-4">
           <TextAction

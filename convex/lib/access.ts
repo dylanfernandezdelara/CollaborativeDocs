@@ -21,7 +21,7 @@ export async function canManageDoc(
   localOwnerId: string | undefined,
 ): Promise<{ doc: Doc<"documents">; allowed: boolean } | null> {
   const doc = await ctx.db.get("documents", docId);
-  if (!doc) {
+  if (!doc || doc.deletedAt !== undefined) {
     return null;
   }
   if (!doc.ownerId) {

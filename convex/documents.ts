@@ -22,12 +22,22 @@ import {
   normalizeEditorName,
   recordLastEdit,
 } from "./lib/lastEdit";
+import { PURGE_PHASES, runPurgeStep } from "./lib/purgeDocument";
 import { guestDisplayName } from "../lib/displayName";
 import type { Doc, Id } from "./_generated/dataModel";
 
 const CLAIM_BATCH_SIZE = 100;
 /** Soft server throttle so repeated touches from one editor do not thrash. */
 const TOUCH_MIN_INTERVAL_MS = 2_000;
+
+const purgePhaseValidator = v.union(
+  v.literal("agents"),
+  v.literal("intents"),
+  v.literal("collaborators"),
+  v.literal("comments"),
+  v.literal("edits"),
+  v.literal("finalize"),
+);
 
 const SEED_MARKDOWN = `# Product Roadmap
 
@@ -129,6 +139,7 @@ async function claimLocalIdentity(
   ]);
 
   for (const document of documents) {
+    if (document.deletedAt !== undefined) continue;
     await ctx.db.patch("documents", document._id, {
       ownerId: claim.userOwnerId,
     });
@@ -231,6 +242,63 @@ export const create = mutation({
   },
 });
 
+/**
+ * Owner-only delete from the documents index (swipe-to-delete).
+ * Tombstones immediately so the list drops the row, then schedules a bounded
+ * cascade purge (same continuation pattern as identity claim).
+ */
+export const remove = mutation({
+  args: {
+    docId: v.id("documents"),
+    localOwnerId: v.optional(v.string()),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const doc = await ctx.db.get("documents", args.docId);
+    if (!doc) {
+      throw new Error("Document not found");
+    }
+    if (doc.deletedAt !== undefined) {
+      return null;
+    }
+    if (!doc.ownerId) {
+      throw new Error("Unauthorized: only the owner can delete this document");
+    }
+
+    const userId = await getAuthUserId(ctx);
+    const subjects = viewerSubjectIds(userId, args.localOwnerId);
+    if (!subjects.includes(doc.ownerId)) {
+      throw new Error("Unauthorized: only the owner can delete this document");
+    }
+
+    await ctx.db.patch("documents", args.docId, { deletedAt: Date.now() });
+    await ctx.scheduler.runAfter(0, internal.documents.purgeStep, {
+      docId: args.docId,
+      phase: PURGE_PHASES[0],
+    });
+    return null;
+  },
+});
+
+/** Bounded cascade step — reschedules itself until the document row is gone. */
+export const purgeStep = internalMutation({
+  args: {
+    docId: v.id("documents"),
+    phase: purgePhaseValidator,
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const next = await runPurgeStep(ctx, args.docId, args.phase);
+    if (next !== "done") {
+      await ctx.scheduler.runAfter(0, internal.documents.purgeStep, {
+        docId: args.docId,
+        phase: next,
+      });
+    }
+    return null;
+  },
+});
+
 export const list = query({
   args: {
     localOwnerId: v.optional(v.string()),
@@ -277,6 +345,7 @@ export const list = query({
     }
 
     const docs = [...byId.values()]
+      .filter((doc) => doc.deletedAt === undefined)
       .sort(
         (a, b) =>
           (b.lastEditedAt ?? b.createdAt) - (a.lastEditedAt ?? a.createdAt),
@@ -323,8 +392,8 @@ export const touch = mutation({
   returns: v.null(),
   handler: async (ctx, args) => {
     const doc = await ctx.db.get("documents", args.docId);
-    if (!doc) {
-      throw new Error("Document not found");
+    if (!doc || doc.deletedAt !== undefined) {
+      return null;
     }
 
     const userId = await getAuthUserId(ctx);
@@ -414,7 +483,7 @@ export const get = query({
   returns: v.union(documentPublicValidator, v.null()),
   handler: async (ctx, args) => {
     const doc = await ctx.db.get("documents", args.id);
-    if (!doc) {
+    if (!doc || doc.deletedAt !== undefined) {
       return null;
     }
     return toPublicDoc(doc);

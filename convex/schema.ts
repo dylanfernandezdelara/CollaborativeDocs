@@ -9,6 +9,8 @@ export default defineSchema({
     createdAt: v.number(),
     /** `local:<cookie>` for anonymous owners, `user:<id>` after GitHub sign-in. */
     ownerId: v.optional(v.string()),
+    /** Set by owner delete; list/get hide the doc while cascade purge finishes. */
+    deletedAt: v.optional(v.number()),
     /** Denormalized last-edit signal for the docs index (humans + agents). */
     lastEditedAt: v.optional(v.number()),
     lastEditorName: v.optional(v.string()),

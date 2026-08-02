@@ -23,6 +23,7 @@ import type * as lib_collaboratorSeats from "../lib/collaboratorSeats.js";
 import type * as lib_lastEdit from "../lib/lastEdit.js";
 import type * as lib_markdown from "../lib/markdown.js";
 import type * as lib_owner from "../lib/owner.js";
+import type * as lib_purgeDocument from "../lib/purgeDocument.js";
 import type * as notifications from "../notifications.js";
 import type * as presence from "../presence.js";
 import type * as prosemirror from "../prosemirror.js";
@@ -50,6 +51,7 @@ declare const fullApi: ApiFromModules<{
   "lib/lastEdit": typeof lib_lastEdit;
   "lib/markdown": typeof lib_markdown;
   "lib/owner": typeof lib_owner;
+  "lib/purgeDocument": typeof lib_purgeDocument;
   notifications: typeof notifications;
   presence: typeof presence;
   prosemirror: typeof prosemirror;
