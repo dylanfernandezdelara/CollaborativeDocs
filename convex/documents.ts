@@ -299,6 +299,42 @@ export const purgeStep = internalMutation({
   },
 });
 
+/** How many document rows to tombstone + schedule per `startPurgeAll` step. */
+const PURGE_ALL_BATCH = 25;
+
+/**
+ * One-shot admin cleanup: tombstone every document and schedule the existing
+ * cascade purge. Invoked from the production Vercel build (deploy key), not
+ * from the client. Reschedules itself until the table is empty.
+ */
+export const startPurgeAll = internalMutation({
+  args: {},
+  returns: v.object({
+    queued: v.number(),
+    done: v.boolean(),
+  }),
+  handler: async (ctx) => {
+    const docs = await ctx.db.query("documents").take(PURGE_ALL_BATCH);
+    let queued = 0;
+    const now = Date.now();
+    for (const doc of docs) {
+      if (doc.deletedAt === undefined) {
+        await ctx.db.patch("documents", doc._id, { deletedAt: now });
+      }
+      await ctx.scheduler.runAfter(0, internal.documents.purgeStep, {
+        docId: doc._id,
+        phase: PURGE_PHASES[0],
+      });
+      queued += 1;
+    }
+    if (docs.length >= PURGE_ALL_BATCH) {
+      await ctx.scheduler.runAfter(0, internal.documents.startPurgeAll, {});
+      return { queued, done: false };
+    }
+    return { queued, done: true };
+  },
+});
+
 export const list = query({
   args: {
     localOwnerId: v.optional(v.string()),

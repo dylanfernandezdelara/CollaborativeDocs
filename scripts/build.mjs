@@ -43,6 +43,16 @@ function describeDeployKey(key) {
   };
 }
 
+/**
+ * One-shot: after this production deploy, purge every document in Convex.
+ * Window closes shortly after the cleanup request (2026-08-02) so later
+ * production builds do not wipe the database again. Remove this block once
+ * the cleanup has landed.
+ */
+const ONE_SHOT_PURGE_ALL_UNTIL_MS = Date.parse("2026-08-04T12:00:00.000Z");
+const shouldOneShotPurgeAll =
+  shouldDeployConvex && Date.now() < ONE_SHOT_PURGE_ALL_UNTIL_MS;
+
 if (shouldDeployConvex) {
   const info = describeDeployKey(deployKey);
   console.log("Vercel Production + CONVEX_DEPLOY_KEY — deploying Convex, then Next.js");
@@ -70,6 +80,52 @@ if (shouldDeployConvex) {
   });
 
   try {
+    if (shouldOneShotPurgeAll) {
+      // Deploy functions first, run the purge, then build Next — `deploy --cmd`
+      // cannot insert a step between push and the Next build.
+      console.log(
+        "ONE-SHOT: deploying Convex, then purging all documents, then Next.js",
+      );
+      const deployResult = spawnSync(
+        "npx",
+        ["convex", "deploy", "--env-file", envFile],
+        {
+          stdio: "inherit",
+          env: process.env,
+          shell: false,
+        },
+      );
+      if ((deployResult.status ?? 1) !== 0) {
+        process.exit(deployResult.status ?? 1);
+      }
+
+      const purgeResult = spawnSync(
+        "npx",
+        [
+          "convex",
+          "run",
+          "documents:startPurgeAll",
+          "--env-file",
+          envFile,
+        ],
+        {
+          stdio: "inherit",
+          env: process.env,
+          shell: false,
+        },
+      );
+      if ((purgeResult.status ?? 1) !== 0) {
+        process.exit(purgeResult.status ?? 1);
+      }
+
+      const nextResult = spawnSync("npm", ["run", "build:next"], {
+        stdio: "inherit",
+        env: process.env,
+        shell: false,
+      });
+      process.exit(nextResult.status ?? 1);
+    }
+
     const result = spawnSync(
       "npx",
       [
