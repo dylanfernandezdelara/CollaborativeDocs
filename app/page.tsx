@@ -190,9 +190,9 @@ export default function HomePage() {
                   >
                     <Link
                       href={`/d/${doc._id}`}
-                      className="grid grid-cols-[4rem_minmax(0,1fr)_auto] items-baseline gap-x-3 py-1.5 transition-opacity duration-200 ease-out hover:opacity-80"
+                      className="grid grid-cols-[5.5rem_minmax(0,1fr)_auto] items-baseline gap-x-3 py-1.5 transition-opacity duration-200 ease-out hover:opacity-80"
                     >
-                      <span className="text-caption text-ink-tertiary">
+                      <span className="truncate text-caption text-ink-tertiary">
                         {when}
                       </span>
                       <span

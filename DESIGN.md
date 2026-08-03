@@ -68,7 +68,7 @@ underline only. Never colored phrases, never colored icons, never row fills.
 - Centered column (~640px prose width).
 - Header: "Documents" (`text-heading`/500) with a **1.5px ink rule** underneath and the
   doc count right-aligned in tertiary.
-- Rows: date in a fixed 64px tertiary column · title (`text-body`; medium when live)
+- Rows: date in a fixed 5.5rem (88px) tertiary column · title (`text-body`; medium when live)
   · owner's name right-aligned in tertiary.
 - Footer actions as text: primary ("New document") underlined 1.5px in olive;
   secondary ("Shared with me") underlined 1px in tertiary gray.

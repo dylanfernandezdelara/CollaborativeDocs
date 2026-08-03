@@ -21,7 +21,7 @@ export default function SignInPage() {
   return (
     <main className="grid min-h-screen md:grid-cols-[1.1fr_1fr]">
       <aside className="hidden flex-col justify-between border-r border-border bg-page-elevated/70 px-8 py-8 md:flex lg:px-12">
-        <Link href="/" className="w-fit text-body font-medium tracking-[-0.15px] text-ink">
+        <Link href="/" className="w-fit text-heading font-medium tracking-[-0.15px] text-ink">
           Docs
         </Link>
         <div className="max-w-[300px]">
@@ -38,7 +38,7 @@ export default function SignInPage() {
         <div className="mx-auto w-full max-w-[320px] md:mx-0">
           <Link
             href="/"
-            className="mb-10 block w-fit text-body font-medium tracking-[-0.15px] text-ink md:hidden"
+            className="mb-10 block w-fit text-heading font-medium tracking-[-0.15px] text-ink md:hidden"
           >
             Docs
           </Link>

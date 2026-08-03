@@ -32,8 +32,8 @@ function HumanAvatar({ name }: { name: string }) {
       <TooltipTrigger
         render={
           <div className="relative">
-            <Avatar size="sm" className="size-6 text-[11px]">
-              <AvatarFallback className="text-[11px] text-ink-secondary">
+            <Avatar size="sm" className="size-6">
+              <AvatarFallback className="text-ink-secondary">
                 {getInitials(name)}
               </AvatarFallback>
             </Avatar>
