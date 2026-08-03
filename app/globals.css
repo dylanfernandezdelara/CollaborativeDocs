@@ -275,4 +275,8 @@
   /* Tables stay denser than prose; label size keeps narrow columns usable. */
   font-size: var(--text-label);
   text-align: left;
+  /* Don't inherit the editor's mid-word breaking: keep words intact and let
+     narrow tables overflow into the scrollable .tableWrapper instead. */
+  overflow-wrap: normal;
+  word-break: normal;
 }
