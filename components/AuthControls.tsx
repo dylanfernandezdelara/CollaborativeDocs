@@ -1,7 +1,7 @@
 "use client";
 
+import { DotsSpinner } from "@/components/DotsSpinner";
 import { TextAction } from "@/components/TextAction";
-import { DotsSpinner } from "@/components/TypingIndicator";
 import { api } from "@/convex/_generated/api";
 import { rememberAuthProvider, useLastAuthProvider } from "@/lib/lastAuthProvider";
 import { useAuthActions } from "@convex-dev/auth/react";
@@ -51,12 +51,26 @@ export function AuthNav() {
   );
 }
 
+type SignInStatus = "idle" | "pending" | "failed";
+
 export function GitHubSignInButton() {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const { signIn } = useAuthActions();
   const lastProvider = useLastAuthProvider();
-  const [pending, setPending] = useState(false);
-  const [failed, setFailed] = useState(false);
+  const [status, setStatus] = useState<SignInStatus>("idle");
+
+  // When the user abandons the GitHub page and comes back, bfcache restores
+  // this page with React state intact — reset so the action isn't stuck
+  // disabled on "Opening GitHub…".
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setStatus("idle");
+      }
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   if (isAuthenticated) {
     return (
@@ -66,6 +80,8 @@ export function GitHubSignInButton() {
     );
   }
 
+  const pending = status === "pending";
+
   return (
     <div>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
@@ -74,22 +90,24 @@ export function GitHubSignInButton() {
           disabled={isLoading || pending}
           aria-busy={pending || undefined}
           onClick={() => {
-            setPending(true);
-            setFailed(false);
-            // Keep the pending state on success — the browser is about to
-            // navigate to GitHub, and flipping the label back first reads
-            // as if the tap did nothing.
-            void signIn("github", { redirectTo: "/" }).catch(() => {
-              setFailed(true);
-              setPending(false);
-            });
+            setStatus("pending");
+            // Stay pending on success — the browser is about to navigate to
+            // GitHub, and flipping the label back first reads as if the tap
+            // did nothing.
+            void signIn("github", { redirectTo: "/" }).then(
+              (result) => {
+                if (!result.redirect) {
+                  setStatus("failed");
+                }
+              },
+              () => setStatus("failed"),
+            );
           }}
         >
           {pending ? "Opening GitHub…" : "Continue with GitHub"}
         </TextAction>
-        {pending ? (
-          <DotsSpinner />
-        ) : lastProvider === "github" ? (
+        {pending ? <DotsSpinner /> : null}
+        {!pending && lastProvider === "github" ? (
           <span className="text-caption tracking-[-0.15px] text-ink-tertiary">
             Last used
           </span>
@@ -99,7 +117,7 @@ export function GitHubSignInButton() {
         role="status"
         className="mt-2 text-caption tracking-[-0.15px] text-ink-secondary empty:mt-0"
       >
-        {failed ? "Couldn’t reach GitHub. Try again." : null}
+        {status === "failed" ? "Sign-in failed. Try again." : null}
       </p>
     </div>
   );
