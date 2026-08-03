@@ -145,7 +145,7 @@ export default function HomePage() {
   const listReady = loaded && docs !== undefined;
 
   return (
-    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col px-4 pt-[18vh] pb-8 sm:pt-[20vh] sm:pb-12">
+    <main className="mx-auto flex min-h-screen max-w-[640px] flex-col px-6 pt-[18vh] pb-8 sm:pt-[20vh] sm:pb-12">
       <nav
         aria-label="Primary navigation"
         className="flex min-h-8 items-center justify-between gap-4"
