@@ -18,8 +18,10 @@ type TextActionProps = AriaAttributes & {
 
 // Press feedback: `active:` dims instantly (transition-none while pressed) and
 // eases back over 200ms on release, so taps register even without hover.
+// `select-none` + no touch callout keep a long-press from starting text
+// selection on touch devices, which would swallow the `:active` state.
 const baseClassName =
-  "inline cursor-pointer border-0 bg-transparent p-0 text-body font-medium tracking-[-0.15px] underline underline-offset-[3px] transition-[color,text-decoration-color,opacity] duration-200 ease-out active:opacity-55 active:transition-none disabled:pointer-events-none disabled:opacity-50 [-webkit-tap-highlight-color:transparent]";
+  "inline cursor-pointer touch-manipulation select-none border-0 bg-transparent p-0 text-body font-medium tracking-[-0.15px] underline underline-offset-[3px] transition-[color,text-decoration-color,opacity] duration-200 ease-out active:opacity-55 active:transition-none disabled:pointer-events-none disabled:opacity-50 [-webkit-tap-highlight-color:transparent] [-webkit-touch-callout:none]";
 
 const variantClassName = {
   primary:
