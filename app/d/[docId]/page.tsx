@@ -321,7 +321,7 @@ export default function DocPage({
     <div
       className={`min-h-screen ${commentsOpen ? "md:pr-[320px]" : ""}`}
     >
-      <header className="pointer-events-none sticky top-4 z-30 flex items-start justify-between px-4 sm:top-6 sm:px-6">
+      <header className="pointer-events-none sticky top-4 z-30 flex items-start justify-between px-8 sm:top-6">
         <Link
           href="/"
           aria-label="All documents"
@@ -386,7 +386,7 @@ export default function DocPage({
         </div>
       </header>
 
-      <main className="mx-auto max-w-[640px] px-4 pt-10 pb-20 sm:pt-16 sm:pb-24">
+      <main className="mx-auto max-w-[640px] px-8 pt-10 pb-20 sm:pt-16 sm:pb-24">
         {sync.isLoading ? (
           <p className="text-[14px] text-ink-tertiary">Loading…</p>
         ) : sync.initialContent !== null ? (
