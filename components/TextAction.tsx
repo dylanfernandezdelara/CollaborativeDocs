@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { pressHaptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import type { AriaAttributes, MouseEventHandler, ReactNode } from "react";
 
@@ -15,8 +16,12 @@ type TextActionProps = AriaAttributes & {
   children: ReactNode;
 };
 
+// Press feedback: `active:` dims instantly (transition-none while pressed) and
+// eases back over 200ms on release, so taps register even without hover.
+// `select-none` + no touch callout keep a long-press from starting text
+// selection on touch devices, which would swallow the `:active` state.
 const baseClassName =
-  "inline cursor-pointer border-0 bg-transparent p-0 text-body font-medium tracking-[-0.15px] underline underline-offset-[3px] transition-colors duration-200 ease-out disabled:pointer-events-none disabled:opacity-50";
+  "inline cursor-pointer touch-manipulation select-none border-0 bg-transparent p-0 text-body font-medium tracking-[-0.15px] underline underline-offset-[3px] transition-[color,text-decoration-color,opacity] duration-200 ease-out active:opacity-55 active:transition-none disabled:pointer-events-none disabled:opacity-50 [-webkit-tap-highlight-color:transparent] [-webkit-touch-callout:none]";
 
 const variantClassName = {
   primary:
@@ -44,11 +49,21 @@ export function TextAction({
 }: TextActionProps) {
   const classes = textActionClassName(variant, className);
 
+  // Haptic on click, not pointerdown: Chrome only allows vibration after a
+  // user activation, which is granted on pointer-up — a pointerdown call is
+  // blocked on the page's very first tap.
+  const handleClick: MouseEventHandler<HTMLButtonElement | HTMLAnchorElement> = (
+    event,
+  ) => {
+    pressHaptic();
+    onClick?.(event);
+  };
+
   if (href !== undefined) {
     return (
       <Link
         href={href}
-        onClick={onClick}
+        onClick={handleClick}
         className={cn(classes, disabled && "pointer-events-none opacity-50")}
         aria-disabled={disabled || undefined}
         tabIndex={disabled ? -1 : undefined}
@@ -62,7 +77,7 @@ export function TextAction({
   return (
     <button
       type="button"
-      onClick={onClick}
+      onClick={handleClick}
       disabled={disabled}
       className={classes}
       {...aria}

@@ -1,5 +1,6 @@
 "use client";
 
+import { DotsSpinner } from "@/components/DotsSpinner";
 import { TextAction } from "@/components/TextAction";
 import { api } from "@/convex/_generated/api";
 import { rememberAuthProvider, useLastAuthProvider } from "@/lib/lastAuthProvider";
@@ -38,22 +39,38 @@ export function AuthNav() {
       <TextAction
         variant="secondary"
         disabled={signingOut}
+        aria-busy={signingOut || undefined}
         onClick={() => {
           setSigningOut(true);
           void signOut().finally(() => setSigningOut(false));
         }}
       >
-        Sign out
+        {signingOut ? "Signing out…" : "Sign out"}
       </TextAction>
     </div>
   );
 }
 
+type SignInStatus = "idle" | "pending" | "failed";
+
 export function GitHubSignInButton() {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const { signIn } = useAuthActions();
   const lastProvider = useLastAuthProvider();
-  const [pending, setPending] = useState(false);
+  const [status, setStatus] = useState<SignInStatus>("idle");
+
+  // When the user abandons the GitHub page and comes back, bfcache restores
+  // this page with React state intact — reset so the action isn't stuck
+  // disabled on "Opening GitHub…".
+  useEffect(() => {
+    const onPageShow = (event: PageTransitionEvent) => {
+      if (event.persisted) {
+        setStatus("idle");
+      }
+    };
+    window.addEventListener("pageshow", onPageShow);
+    return () => window.removeEventListener("pageshow", onPageShow);
+  }, []);
 
   if (isAuthenticated) {
     return (
@@ -63,25 +80,45 @@ export function GitHubSignInButton() {
     );
   }
 
+  const pending = status === "pending";
+
   return (
-    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-      <TextAction
-        variant="primary"
-        disabled={isLoading || pending}
-        onClick={() => {
-          setPending(true);
-          void signIn("github", { redirectTo: "/" }).finally(() =>
-            setPending(false),
-          );
-        }}
+    <div>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <TextAction
+          variant="primary"
+          disabled={isLoading || pending}
+          aria-busy={pending || undefined}
+          onClick={() => {
+            setStatus("pending");
+            // Stay pending on success — the browser is about to navigate to
+            // GitHub, and flipping the label back first reads as if the tap
+            // did nothing.
+            void signIn("github", { redirectTo: "/" }).then(
+              (result) => {
+                if (!result.redirect) {
+                  setStatus("failed");
+                }
+              },
+              () => setStatus("failed"),
+            );
+          }}
+        >
+          {pending ? "Opening GitHub…" : "Continue with GitHub"}
+        </TextAction>
+        {pending ? <DotsSpinner /> : null}
+        {!pending && lastProvider === "github" ? (
+          <span className="text-caption tracking-[-0.15px] text-ink-tertiary">
+            Last used
+          </span>
+        ) : null}
+      </div>
+      <p
+        role="status"
+        className="mt-2 text-caption tracking-[-0.15px] text-ink-secondary empty:mt-0"
       >
-        {pending ? "Redirecting…" : "Continue with GitHub"}
-      </TextAction>
-      {lastProvider === "github" ? (
-        <span className="text-caption tracking-[-0.15px] text-ink-tertiary">
-          Last used
-        </span>
-      ) : null}
+        {status === "failed" ? "Sign-in failed. Try again." : null}
+      </p>
     </div>
   );
 }
