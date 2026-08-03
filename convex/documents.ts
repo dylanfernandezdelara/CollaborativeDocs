@@ -41,7 +41,7 @@ const purgePhaseValidator = v.union(
 
 const SEED_MARKDOWN = `# Product Roadmap
 
-This document tracks our product milestones for the second half of 2026. Each milestone has an owner and a target date.
+This memo tracks our product milestones for the second half of 2026. Each milestone has an owner and a target date.
 
 ## Milestone 1: Agent Collaboration MVP
 
