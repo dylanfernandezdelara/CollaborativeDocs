@@ -272,6 +272,7 @@
 .ProseMirror th {
   border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
   padding: 6px 10px;
-  font-size: var(--text-body);
+  /* Tables stay denser than prose; label size keeps narrow columns usable. */
+  font-size: var(--text-label);
   text-align: left;
 }
