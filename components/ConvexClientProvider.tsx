@@ -18,7 +18,7 @@ export function ConvexClientProvider({ children }: { children: ReactNode }) {
 
   if (!client) {
     return (
-      <div className="flex min-h-screen items-center justify-center p-6 text-[14px] text-ink-secondary">
+      <div className="flex min-h-screen items-center justify-center p-6 text-body text-ink-secondary">
         Configure <code className="mx-1">NEXT_PUBLIC_CONVEX_URL</code> to run
         the app (locally: <code className="mx-1">npm run convex:once</code>).
       </div>

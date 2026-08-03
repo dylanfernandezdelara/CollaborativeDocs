@@ -16,7 +16,7 @@ type TextActionProps = AriaAttributes & {
 };
 
 const baseClassName =
-  "inline cursor-pointer border-0 bg-transparent p-0 text-[13px] font-medium tracking-[-0.15px] underline underline-offset-[3px] transition-colors duration-200 ease-out disabled:pointer-events-none disabled:opacity-50";
+  "inline cursor-pointer border-0 bg-transparent p-0 text-body font-medium tracking-[-0.15px] underline underline-offset-[3px] transition-colors duration-200 ease-out disabled:pointer-events-none disabled:opacity-50";
 
 const variantClassName = {
   primary:

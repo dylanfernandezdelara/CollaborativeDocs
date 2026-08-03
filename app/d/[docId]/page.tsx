@@ -301,7 +301,7 @@ export default function DocPage({
   if (doc === undefined) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center">
-        <p className="text-[14px] text-ink-tertiary">Loading…</p>
+        <p className="text-body text-ink-tertiary">Loading…</p>
       </div>
     );
   }
@@ -309,8 +309,8 @@ export default function DocPage({
   if (doc === null) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3">
-        <p className="text-[14px] text-ink-secondary">Document not found.</p>
-        <Link href="/" className="text-[13px] text-ink underline">
+        <p className="text-body text-ink-secondary">Document not found.</p>
+        <Link href="/" className="text-body text-ink underline">
           Back home
         </Link>
       </div>
@@ -359,7 +359,7 @@ export default function DocPage({
                   key={label}
                   type="button"
                   aria-pressed={pressed}
-                  className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-[13px] tracking-[-0.15px] text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink"
+                  className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-left text-body tracking-[-0.15px] text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink"
                   onClick={() => {
                     setOverflowOpen(false);
                     onClick();
@@ -367,7 +367,7 @@ export default function DocPage({
                 >
                   {label}
                   {pressed ? (
-                    <span className="ml-auto text-[11px] text-ink-tertiary">
+                    <span className="ml-auto text-caption text-ink-tertiary">
                       Open
                     </span>
                   ) : null}
@@ -376,7 +376,7 @@ export default function DocPage({
               <div className="mx-1 my-1 border-t border-ink/8" />
               <Link
                 href="/"
-                className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-[13px] tracking-[-0.15px] text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink"
+                className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-body tracking-[-0.15px] text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink"
                 onClick={() => setOverflowOpen(false)}
               >
                 All documents
@@ -388,7 +388,7 @@ export default function DocPage({
 
       <main className="mx-auto max-w-[640px] px-8 pt-10 pb-20 sm:pt-16 sm:pb-24">
         {sync.isLoading ? (
-          <p className="text-[14px] text-ink-tertiary">Loading…</p>
+          <p className="text-body text-ink-tertiary">Loading…</p>
         ) : sync.initialContent !== null ? (
           <EditorProvider
             extensions={extensions}

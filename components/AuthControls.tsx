@@ -32,7 +32,7 @@ export function AuthNav() {
 
   return (
     <div className="flex min-w-0 items-center gap-3">
-      <span className="max-w-32 truncate text-[12px] tracking-[-0.15px] text-ink-tertiary">
+      <span className="max-w-32 truncate text-label tracking-[-0.15px] text-ink-tertiary">
         {user?.name ?? user?.email ?? "Signed in"}
       </span>
       <TextAction
@@ -78,7 +78,7 @@ export function GitHubSignInButton() {
         {pending ? "Redirecting…" : "Continue with GitHub"}
       </TextAction>
       {lastProvider === "github" ? (
-        <span className="text-[11px] tracking-[-0.15px] text-ink-tertiary">
+        <span className="text-caption tracking-[-0.15px] text-ink-tertiary">
           Last used
         </span>
       ) : null}

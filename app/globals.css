@@ -55,6 +55,23 @@
   --radius-4xl: calc(var(--radius) * 2.6);
 }
 
+@theme {
+  /*
+   * DESIGN.md type ramp — semantic sizes, mobile-first.
+   * Values are overridden for ≥sm screens below (desktop stays denser).
+   */
+  --text-caption: 13px; /* dates, owner names, typing lines */
+  --text-caption--line-height: 1.4;
+  --text-label: 14px; /* secondary labels, metadata */
+  --text-label--line-height: 1.45;
+  --text-body: 16px; /* body, doc titles, actions */
+  --text-body--line-height: 1.5;
+  --text-heading: 18px; /* section headers, nav, panel titles */
+  --text-heading--line-height: 1.4;
+  --text-title: 26px; /* page titles */
+  --text-title--line-height: 1.25;
+}
+
 :root {
   /* Bone · Olive (light) — DESIGN.md */
   --background: #fbfaf4;
@@ -144,12 +161,24 @@
   }
   html {
     font-family: -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
-    font-size: 14px;
+    /* Standard 16px rem base so rem-sized UI matches platform norms. */
+    font-size: 16px;
     letter-spacing: -0.15px;
   }
   body {
     background-color: var(--page-bg);
     color: var(--text-primary);
+  }
+}
+
+/* Desktop (≥sm) keeps the denser DESIGN.md scale; phones get platform-normal sizes. */
+@media (min-width: 40rem) {
+  :root {
+    --text-caption: 12px;
+    --text-label: 13px;
+    --text-body: 14px;
+    --text-heading: 16px;
+    --text-title: 24px;
   }
 }
 
@@ -198,6 +227,14 @@
   min-height: 60vh;
   overflow-wrap: anywhere;
   word-break: break-word;
+  /* ≥16px also prevents iOS Safari's focus auto-zoom on the editable area. */
+  font-size: 17px;
+}
+
+@media (min-width: 40rem) {
+  .ProseMirror {
+    font-size: 16px;
+  }
 }
 
 .ProseMirror p {
@@ -206,13 +243,13 @@
 }
 
 .ProseMirror h1 {
-  font-size: 24px;
+  font-size: 28px;
   font-weight: 500;
   margin: 1em 0 0.4em;
 }
 
 .ProseMirror h2 {
-  font-size: 18px;
+  font-size: 22px;
   font-weight: 500;
   margin: 1em 0 0.3em;
 }
@@ -235,6 +272,6 @@
 .ProseMirror th {
   border: 1px solid color-mix(in srgb, var(--text-primary) 12%, transparent);
   padding: 6px 10px;
-  font-size: 13px;
+  font-size: var(--text-body);
   text-align: left;
 }
