@@ -49,12 +49,21 @@ export function TextAction({
 }: TextActionProps) {
   const classes = textActionClassName(variant, className);
 
+  // Haptic on click, not pointerdown: Chrome only allows vibration after a
+  // user activation, which is granted on pointer-up — a pointerdown call is
+  // blocked on the page's very first tap.
+  const handleClick: MouseEventHandler<HTMLButtonElement | HTMLAnchorElement> = (
+    event,
+  ) => {
+    pressHaptic();
+    onClick?.(event);
+  };
+
   if (href !== undefined) {
     return (
       <Link
         href={href}
-        onClick={onClick}
-        onPointerDown={pressHaptic}
+        onClick={handleClick}
         className={cn(classes, disabled && "pointer-events-none opacity-50")}
         aria-disabled={disabled || undefined}
         tabIndex={disabled ? -1 : undefined}
@@ -68,8 +77,7 @@ export function TextAction({
   return (
     <button
       type="button"
-      onClick={onClick}
-      onPointerDown={pressHaptic}
+      onClick={handleClick}
       disabled={disabled}
       className={classes}
       {...aria}
