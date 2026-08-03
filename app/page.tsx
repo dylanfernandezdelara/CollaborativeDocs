@@ -146,13 +146,10 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-[640px] flex-col px-8 pt-[18vh] pb-8 sm:pt-[20vh] sm:pb-12">
-      <nav
-        aria-label="Primary navigation"
-        className="flex min-h-8 items-center justify-between gap-4"
-      >
+      <header className="flex min-h-8 items-center justify-between gap-4">
         <h1 className="text-heading font-medium text-ink">Memos</h1>
         <AuthNav />
-      </nav>
+      </header>
 
       <section className="mt-10 sm:mt-12">
         <div className="flex min-h-5 items-baseline justify-end border-b-[1.5px] border-ink pb-1.5">

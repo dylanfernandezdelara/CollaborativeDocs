@@ -45,7 +45,7 @@ This memo tracks our product milestones for the second half of 2026. Each milest
 
 ## Milestone 1: Agent Collaboration MVP
 
-Ship a collaborative editor where AI agents and humans co-edit documents in real time, with tracked agent edits, intents, and comment threads.
+Ship a collaborative editor where AI agents and humans co-edit memos in real time, with tracked agent edits, intents, and comment threads.
 
 ## Milestone 2: Enterprise Readiness
 
