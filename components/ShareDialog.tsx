@@ -79,7 +79,7 @@ function InviteKindTabs({
             className={
               selected
                 ? textActionClassName("primary")
-                : "cursor-pointer border-0 bg-transparent p-0 text-[13px] font-medium tracking-[-0.15px] text-ink-tertiary transition-colors duration-200 ease-out hover:text-ink-secondary"
+                : "cursor-pointer border-0 bg-transparent p-0 text-body font-medium tracking-[-0.15px] text-ink-tertiary transition-colors duration-200 ease-out hover:text-ink-secondary"
             }
           >
             {option.label}
@@ -108,11 +108,11 @@ function CopyableBlock({
       className="group flex w-full cursor-pointer items-start gap-3 rounded-[8px] border border-ink/10 bg-page p-3 text-left transition-colors hover:border-ink/20 hover:bg-surface-hover"
     >
       {multiline ? (
-        <pre className="min-w-0 flex-1 whitespace-pre-wrap break-all text-[12px] leading-relaxed text-ink-secondary">
+        <pre className="min-w-0 flex-1 whitespace-pre-wrap break-all text-label leading-relaxed text-ink-secondary">
           {text}
         </pre>
       ) : (
-        <code className="min-w-0 flex-1 break-all text-[12px] leading-relaxed text-ink-secondary">
+        <code className="min-w-0 flex-1 break-all text-label leading-relaxed text-ink-secondary">
           {text}
         </code>
       )}
@@ -295,14 +295,14 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogContent className="flex max-h-[min(90dvh,40rem)] max-w-md flex-col overflow-hidden border-ink/10 p-0 sm:max-w-md">
         <DialogHeader className="shrink-0 px-4 pt-4 pr-12">
-          <DialogTitle className="text-[14px] font-medium text-ink">
+          <DialogTitle className="text-heading font-medium text-ink">
             Share
           </DialogTitle>
         </DialogHeader>
 
         <div className="flex min-h-0 flex-1 flex-col gap-5 overflow-y-auto px-4 pb-4">
           <section>
-            <p className="text-[12px] text-ink-tertiary">
+            <p className="text-label text-ink-tertiary">
               Anyone with the link can edit.
             </p>
             <div className="mt-2">
@@ -313,13 +313,13 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
               />
             </div>
             {copied === "doc" && (
-              <p className="mt-1 text-[12px] text-ink-tertiary">Link copied</p>
+              <p className="mt-1 text-label text-ink-tertiary">Link copied</p>
             )}
           </section>
 
           <section>
             <div className="flex flex-wrap items-center justify-between gap-3">
-              <h3 className="text-[13px] font-medium text-ink">Invite</h3>
+              <h3 className="text-body font-medium text-ink">Invite</h3>
               <InviteKindTabs
                 value={inviteKind}
                 onChange={handleKindChange}
@@ -331,7 +331,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Name"
-                className="h-8 min-w-0 flex-1 rounded-[6px] text-[16px] sm:text-[13px]"
+                className="h-8 min-w-0 flex-1 rounded-[6px]"
               />
               <TextAction
                 variant="primary"
@@ -345,7 +345,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
             {invitePayload && (
               <div className="mt-3 space-y-3">
                 <div>
-                  <p className="mb-1 text-[12px] text-ink-tertiary">
+                  <p className="mb-1 text-label text-ink-tertiary">
                     {invitePayload.label}
                   </p>
                   <CopyableBlock
@@ -354,7 +354,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                     onCopy={() => void copyText(invitePayload.text, "invite")}
                   />
                   {copied === "invite" && (
-                    <p className="mt-1 text-[12px] text-ink-tertiary">
+                    <p className="mt-1 text-label text-ink-tertiary">
                       Copied to clipboard
                     </p>
                   )}
@@ -365,7 +365,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                     <button
                       type="button"
                       onClick={() => setManualOpen(!manualOpen)}
-                      className="flex items-center gap-1 text-[12px] text-ink-secondary hover:text-ink"
+                      className="flex items-center gap-1 text-label text-ink-secondary hover:text-ink"
                     >
                       {manualOpen ? (
                         <ChevronDown className="size-3.5" />
@@ -391,11 +391,11 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
           </section>
 
           <section>
-            <h3 className="text-[13px] font-medium text-ink">On this doc</h3>
+            <h3 className="text-body font-medium text-ink">On this doc</h3>
             {accessLoading ? (
-              <p className="mt-2 text-[12px] text-ink-tertiary">Loading…</p>
+              <p className="mt-2 text-label text-ink-tertiary">Loading…</p>
             ) : !accessRows.length ? (
-              <p className="mt-2 text-[12px] text-ink-tertiary">
+              <p className="mt-2 text-label text-ink-tertiary">
                 No one invited yet.
               </p>
             ) : (
@@ -408,13 +408,13 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                       className="flex items-center justify-between gap-3 py-2"
                     >
                       <div className="flex min-w-0 items-baseline gap-2">
-                        <span className="truncate text-[13px] tracking-[-0.15px] text-ink">
+                        <span className="truncate text-body tracking-[-0.15px] text-ink">
                           {row.kind === "agent"
                             ? `${row.name} (agent)`
                             : row.name}
                         </span>
                         {status ? (
-                          <span className="shrink-0 text-[12px] tracking-[-0.15px] text-ink-tertiary">
+                          <span className="shrink-0 text-label tracking-[-0.15px] text-ink-tertiary">
                             {status}
                           </span>
                         ) : null}
@@ -422,7 +422,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
                       {row.status !== "revoked" && (
                         <TextAction
                           variant="secondary"
-                          className="shrink-0 text-[12px]"
+                          className="shrink-0 text-label"
                           onClick={() => {
                             if (row.kind === "person") {
                               void revokeHuman({

@@ -47,7 +47,7 @@ function SendToAgentAction({
     return (
       <TextAction
         variant="secondary"
-        className="text-[12px]"
+        className="text-label"
         onClick={() => void sendToAgent({ commentId, agentId: agent._id })}
       >
         Send to agent
@@ -57,7 +57,7 @@ function SendToAgentAction({
 
   return (
     <Popover open={open} onOpenChange={setOpen}>
-      <PopoverTrigger className={textActionClassName("secondary", "text-[12px]")}>
+      <PopoverTrigger className={textActionClassName("secondary", "text-label")}>
         Send to agent
       </PopoverTrigger>
       <PopoverContent className="w-44 rounded-[8px] p-1">
@@ -65,7 +65,7 @@ function SendToAgentAction({
           <button
             key={agent._id}
             type="button"
-            className="flex w-full items-center rounded-[6px] px-2 py-1.5 text-left text-[13px] tracking-[-0.15px] text-ink-secondary hover:bg-surface-hover hover:text-ink"
+            className="flex w-full items-center rounded-[6px] px-2 py-1.5 text-left text-body tracking-[-0.15px] text-ink-secondary hover:bg-surface-hover hover:text-ink"
             onClick={() => {
               void sendToAgent({ commentId, agentId: agent._id });
               setOpen(false);
@@ -163,7 +163,7 @@ export function CommentsPanel({
       className="fixed inset-0 z-50 flex flex-col bg-page md:inset-y-0 md:left-auto md:right-0 md:z-40 md:w-[320px] md:border-l md:border-ink/10"
     >
       <div className="flex h-12 shrink-0 items-center justify-between border-b border-ink/10 px-4">
-        <h2 className="text-[14px] font-medium text-ink">Comments</h2>
+        <h2 className="text-heading font-medium text-ink">Comments</h2>
         <TextAction
           variant="secondary"
           onClick={onClose}
@@ -175,8 +175,8 @@ export function CommentsPanel({
 
       {composeAnchor !== null && (
         <div className="border-b border-ink/10 p-4">
-          <p className="text-[12px] text-ink-tertiary">New comment on</p>
-          <blockquote className="mt-1 border-l-2 border-ink/10 pl-2 text-[12px] text-ink-secondary">
+          <p className="text-label text-ink-tertiary">New comment on</p>
+          <blockquote className="mt-1 border-l-2 border-ink/10 pl-2 text-label text-ink-secondary">
             {composeAnchor}
           </blockquote>
           <Textarea
@@ -184,7 +184,7 @@ export function CommentsPanel({
             value={composeText}
             onChange={(e) => setComposeText(e.target.value)}
             placeholder="Write a comment…"
-            className="mt-2 min-h-16 rounded-[6px] text-[16px] sm:text-[13px]"
+            className="mt-2 min-h-16 rounded-[6px]"
           />
           <div className="mt-3 flex flex-wrap items-center gap-3">
             <TextAction
@@ -210,7 +210,7 @@ export function CommentsPanel({
       <ScrollArea className="flex-1">
         <div className="space-y-4 p-4">
           {roots.length === 0 && composeAnchor === null && (
-            <p className="text-[13px] text-ink-tertiary">
+            <p className="text-body text-ink-tertiary">
               Select text in the document to add a comment.
             </p>
           )}
@@ -225,19 +225,19 @@ export function CommentsPanel({
                 }
               >
                 {comment.anchorText && (
-                  <blockquote className="mb-1 border-l-2 border-ink/10 pl-2 text-[12px] text-ink-tertiary">
+                  <blockquote className="mb-1 border-l-2 border-ink/10 pl-2 text-label text-ink-tertiary">
                     {comment.anchorText}
                   </blockquote>
                 )}
-                <p className="text-[13px] text-ink">{comment.text}</p>
-                <p className="mt-0.5 text-[12px] text-ink-tertiary">
+                <p className="text-body text-ink">{comment.text}</p>
+                <p className="mt-0.5 text-label text-ink-tertiary">
                   {comment.authorName}
                 </p>
 
                 {replies.map((reply) => (
                   <div key={reply._id} className="ml-4 mt-3 border-l border-ink/8 pl-3">
-                    <p className="text-[13px] text-ink">{reply.text}</p>
-                    <p className="mt-0.5 text-[12px] text-ink-tertiary">
+                    <p className="text-body text-ink">{reply.text}</p>
+                    <p className="mt-0.5 text-label text-ink-tertiary">
                       {reply.authorName}
                     </p>
                   </div>
@@ -254,12 +254,12 @@ export function CommentsPanel({
                         }))
                       }
                       placeholder="Reply…"
-                      className="min-h-12 rounded-[6px] text-[16px] sm:text-[13px]"
+                      className="min-h-12 rounded-[6px]"
                     />
                     <div className="flex flex-wrap items-center gap-3">
                       <TextAction
                         variant="secondary"
-                        className="text-[12px]"
+                        className="text-label"
                         disabled={!(replyTexts[comment._id] ?? "").trim()}
                         onClick={() => void submitReply(comment._id)}
                       >

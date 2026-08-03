@@ -150,25 +150,25 @@ export default function HomePage() {
         aria-label="Primary navigation"
         className="flex min-h-8 items-center justify-between gap-4"
       >
-        <span className="text-[14px] font-medium text-ink">Docs</span>
+        <span className="text-heading font-medium text-ink">Docs</span>
         <AuthNav />
       </nav>
 
       <section className="mt-10 sm:mt-12">
         <div className="flex items-baseline border-b-[1.5px] border-ink pb-1.5">
-          <h1 className="text-[14px] font-medium text-ink">Documents</h1>
+          <h1 className="text-heading font-medium text-ink">Documents</h1>
           <span className="flex-1" />
           {listReady ? (
-            <span className="text-[11.5px] text-ink-tertiary">
+            <span className="text-caption text-ink-tertiary">
               {docs.length} {docs.length === 1 ? "document" : "documents"}
             </span>
           ) : null}
         </div>
 
         {!listReady ? (
-          <p className="mt-3 text-[13px] text-ink-tertiary">Loading…</p>
+          <p className="mt-3 text-body text-ink-tertiary">Loading…</p>
         ) : docs.length === 0 ? (
-          <p className="mt-3 text-[13px] text-ink-tertiary">No documents yet.</p>
+          <p className="mt-3 text-body text-ink-tertiary">No documents yet.</p>
         ) : (
           <ul className="mt-1">
             {docs.map((doc) => {
@@ -190,19 +190,19 @@ export default function HomePage() {
                   >
                     <Link
                       href={`/d/${doc._id}`}
-                      className="grid grid-cols-[4rem_minmax(0,1fr)_auto] items-baseline gap-x-3 py-1.5 transition-opacity duration-200 ease-out hover:opacity-80"
+                      className="grid grid-cols-[5.5rem_minmax(0,1fr)_auto] items-baseline gap-x-3 py-1.5 transition-opacity duration-200 ease-out hover:opacity-80"
                     >
-                      <span className="text-[11px] text-ink-tertiary">
+                      <span className="truncate text-caption text-ink-tertiary">
                         {when}
                       </span>
                       <span
-                        className={`min-w-0 truncate text-[13px] text-ink ${
+                        className={`min-w-0 truncate text-body text-ink ${
                           activity ? "font-medium" : "font-normal"
                         }`}
                       >
                         {doc.title}
                       </span>
-                      <span className="pl-3 text-[11.5px] text-ink-tertiary">
+                      <span className="pl-3 text-caption text-ink-tertiary">
                         {ownerLabel(doc.isYours, doc.ownerName)}
                       </span>
                       {activity ? (
@@ -219,7 +219,7 @@ export default function HomePage() {
         )}
 
         {deleteError ? (
-          <p className="mt-3 text-[12px] text-destructive" role="alert">
+          <p className="mt-3 text-label text-destructive" role="alert">
             {deleteError}
           </p>
         ) : null}

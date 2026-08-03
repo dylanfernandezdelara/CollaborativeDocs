@@ -101,7 +101,7 @@ export function SwipeDeleteRow({
             void onDelete();
           }}
           style={{ width: ACTION_WIDTH }}
-          className="absolute inset-y-0 right-0 flex items-center justify-center bg-destructive text-[12px] font-medium tracking-[-0.15px] text-background transition-opacity duration-200 ease-out disabled:opacity-60"
+          className="absolute inset-y-0 right-0 flex items-center justify-center bg-destructive text-label font-medium tracking-[-0.15px] text-background transition-opacity duration-200 ease-out disabled:opacity-60"
         >
           {deleting ? "…" : "Delete"}
         </button>

@@ -32,8 +32,8 @@ function HumanAvatar({ name }: { name: string }) {
       <TooltipTrigger
         render={
           <div className="relative">
-            <Avatar size="sm" className="size-6 text-[10px]">
-              <AvatarFallback className="text-[10px] text-ink-secondary">
+            <Avatar size="sm" className="size-6">
+              <AvatarFallback className="text-ink-secondary">
                 {getInitials(name)}
               </AvatarFallback>
             </Avatar>
@@ -72,7 +72,7 @@ export function AvatarStack({
         {onlineAgents.map((agent) => (
           <span
             key={agent._id}
-            className="text-[11px] tracking-[-0.15px] text-ink-tertiary"
+            className="text-caption tracking-[-0.15px] text-ink-tertiary"
           >
             {agent.name} (agent)
           </span>

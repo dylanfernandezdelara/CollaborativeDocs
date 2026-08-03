@@ -18,7 +18,7 @@ export function DotsSpinner() {
   return (
     <span
       aria-hidden
-      className="inline text-[11px] not-italic text-ink-secondary"
+      className="inline text-caption not-italic text-ink-secondary"
     >
       {DOTS_FRAMES[frame]}
     </span>
@@ -48,7 +48,7 @@ export function TypingLine(props: TypingLineProps) {
       : `${props.count} in the doc`;
 
   return (
-    <span className="inline text-[11px] italic text-ink-secondary">
+    <span className="inline text-caption italic text-ink-secondary">
       <DotsSpinner /> {label}
     </span>
   );

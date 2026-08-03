@@ -27,15 +27,23 @@ for the reference composite: "Quiet Index · dated" × "Bone · Olive").
 | Family | SF Pro (system fallback: `-apple-system, BlinkMacSystemFont, system-ui`) — everywhere, including dates and metadata |
 | Weights | Regular (400), Medium (500) |
 | Letter spacing | `-0.15px` |
-| Sizes | `11px`, `12px`, `13px`, `14px`, `21px` |
+| Rem base | `16px` (browser default — don't shrink it; shadcn/rem UI depends on it) |
 
-**Usage**
+**Semantic sizes** — defined once in `app/globals.css` (`@theme`) and used as
+Tailwind classes (`text-body`, `text-caption`, …). Never hard-code `text-[13px]`.
+Desktop keeps the dense scale; phones step up to platform-normal sizes
+(breakpoint: `sm` / 640px).
 
-- `21px` — page titles (medium weight)
-- `14px` — section headers, nav
-- `13px` — body, doc titles, actions
-- `12px` — secondary labels
-- `11px` — dates, owner names, typing lines, captions
+| Class | Role | Desktop (≥sm) | Mobile |
+| --- | --- | --- | --- |
+| `text-title` | page titles (medium weight) | `24px` | `26px` |
+| `text-heading` | section headers, nav, panel titles | `16px` | `18px` |
+| `text-body` | body, doc titles, actions | `14px` | `16px` |
+| `text-label` | secondary labels, metadata | `13px` | `14px` |
+| `text-caption` | dates, owner names, typing lines, captions | `12px` | `13px` |
+
+Editor prose (`.ProseMirror`) is set separately: body `16px` desktop / `17px`
+mobile (≥16px also avoids iOS input auto-zoom), `h1` `28px`, `h2` `22px`.
 
 ## Color — Bone · Olive
 
@@ -58,9 +66,9 @@ underline only. Never colored phrases, never colored icons, never row fills.
 ## Documents index — "Quiet Index · dated"
 
 - Centered column (~640px prose width).
-- Header: "Documents" (14/500) with a **1.5px ink rule** underneath and the
+- Header: "Documents" (`text-heading`/500) with a **1.5px ink rule** underneath and the
   doc count right-aligned in tertiary.
-- Rows: date in a fixed 64px tertiary column · title (13px; medium when live)
+- Rows: date in a fixed 5.5rem (88px) tertiary column · title (`text-body`; medium when live)
   · owner's name right-aligned in tertiary.
 - Footer actions as text: primary ("New document") underlined 1.5px in olive;
   secondary ("Shared with me") underlined 1px in tertiary gray.
@@ -86,7 +94,7 @@ position is always a person and never needs a qualifier.
   (`lastEditedAt ?? createdAt`).
 - **Spinner** — the `dots` spinner from
   [cli-spinners](https://github.com/sindresorhus/cli-spinners)
-  (frames `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏`, 80ms), rendered at ~11px in secondary gray.
+  (frames `⠋⠙⠹⠸⠼⠴⠦⠧⠇⠏`, 80ms), rendered at `text-caption` in secondary gray.
   Motion is the live signal; it carries no color.
 - **Agents** — always named with the literal word "agent" in plain gray text:
   `Scout (agent)`. Agents never get avatars, faces, colored labels, or
