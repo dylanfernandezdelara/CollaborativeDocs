@@ -42,10 +42,10 @@ export function TypingLine(props: TypingLineProps) {
     props.kind === "typing"
       ? `${props.name}${props.isAgent ? " (agent)" : ""} is typing${
           props.othersCount && props.othersCount > 0
-            ? ` · ${props.othersCount} other${props.othersCount === 1 ? "" : "s"} in the doc`
+            ? ` · ${props.othersCount} other${props.othersCount === 1 ? "" : "s"} in the memo`
             : ""
         }`
-      : `${props.count} in the doc`;
+      : `${props.count} in the memo`;
 
   return (
     <span className="inline text-caption italic text-ink-secondary">

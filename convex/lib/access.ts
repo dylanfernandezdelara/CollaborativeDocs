@@ -57,7 +57,7 @@ export async function assertCanManageDoc(
 ): Promise<Doc<"documents">> {
   const result = await canManageDoc(ctx, docId, localOwnerId);
   if (!result) {
-    throw new Error("Document not found");
+    throw new Error("Memo not found");
   }
   if (!result.allowed) {
     throw new Error("Unauthorized: only the owner or collaborators can manage sharing");

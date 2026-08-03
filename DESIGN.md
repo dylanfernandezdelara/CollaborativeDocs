@@ -38,7 +38,7 @@ Desktop keeps the dense scale; phones step up to platform-normal sizes
 | --- | --- | --- | --- |
 | `text-title` | page titles (medium weight) | `24px` | `26px` |
 | `text-heading` | section headers, nav, panel titles | `16px` | `18px` |
-| `text-body` | body, doc titles, actions | `14px` | `16px` |
+| `text-body` | body, memo titles, actions | `14px` | `16px` |
 | `text-label` | secondary labels, metadata | `13px` | `14px` |
 | `text-caption` | dates, owner names, typing lines, captions | `12px` | `13px` |
 
@@ -63,34 +63,34 @@ no status-LED green.
 Accent dosage is deliberately sparse: primary-action underline and active-nav
 underline only. Never colored phrases, never colored icons, never row fills.
 
-## Documents index — "Quiet Index · dated"
+## Memos index — "Quiet Index · dated"
 
 - Centered column (~640px prose width).
-- Header: "Documents" (`text-heading`/500) with a **1.5px ink rule** underneath and the
-  doc count right-aligned in tertiary.
+- Nav wordmark-as-h1: "Memos" (`text-heading`/500). Below it, a **1.5px ink rule**
+  carrying only the right-aligned memo count in tertiary.
 - Rows: date in a fixed 5.5rem (88px) tertiary column · title (`text-body`; medium when live)
   · owner's name right-aligned in tertiary.
-- Footer actions as text: primary ("New document") underlined 1.5px in olive;
+- Footer actions as text: primary ("New memo") underlined 1.5px in olive;
   secondary ("Shared with me") underlined 1px in tertiary gray.
 
 ## Authorship & presence
 
-Structural fact: **only humans create documents.** A name in the owner
+Structural fact: **only humans create memos.** A name in the owner
 position is always a person and never needs a qualifier.
 
 - **Owner** — always visible, right edge of every row, tertiary gray. Never
   displaced by live activity.
 - **Live editing** — live rows add one line beneath the title, indented to
   the text column: an animated spinner + gray italic sentence, e.g.
-  `⠋ Scout (agent) is typing · 2 others in the doc`.
+  `⠋ Scout (agent) is typing · 2 others in the memo`.
 - **Index signal sources** — typing comes from denormalized last-edit
-  (`lastEditedAt` / editor name derived server-side). “Others in the doc”
+  (`lastEditedAt` / editor name derived server-side). “Others in the memo”
   on the index counts live agents only (client-filtered `lastSeenAt` from
   `agentHeartbeats`). The index does **not** subscribe to human presence
   rooms (avoids list-query churn on every heartbeat). Legacy ownerless docs
   omit last-edit and agent heartbeats on the list entirely so they do not
   broadcast who is editing to every visitor. Full human presence stays on
-  the document page avatar stack. List order matches the date column
+  the memo page avatar stack. List order matches the date column
   (`lastEditedAt ?? createdAt`).
 - **Spinner** — the `dots` spinner from
   [cli-spinners](https://github.com/sindresorhus/cli-spinners)

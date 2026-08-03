@@ -391,7 +391,7 @@ export function ShareDialog({ docId, open, onOpenChange }: ShareDialogProps) {
           </section>
 
           <section>
-            <h3 className="text-body font-medium text-ink">On this doc</h3>
+            <h3 className="text-body font-medium text-ink">On this memo</h3>
             {accessLoading ? (
               <p className="mt-2 text-label text-ink-tertiary">Loading…</p>
             ) : !accessRows.length ? (

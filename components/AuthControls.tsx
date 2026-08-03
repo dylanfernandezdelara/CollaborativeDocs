@@ -58,7 +58,7 @@ export function GitHubSignInButton() {
   if (isAuthenticated) {
     return (
       <TextAction href="/" variant="primary">
-        Go to documents
+        Go to memos
       </TextAction>
     );
   }

@@ -22,12 +22,12 @@ export default function SignInPage() {
     <main className="grid min-h-screen md:grid-cols-[1.1fr_1fr]">
       <aside className="hidden flex-col justify-between border-r border-border bg-page-elevated/70 px-8 py-8 md:flex lg:px-12">
         <Link href="/" className="w-fit text-heading font-medium tracking-[-0.15px] text-ink">
-          Docs
+          Memos
         </Link>
         <div className="max-w-[300px]">
           <DocumentVignette />
           <p className="mt-4 text-body tracking-[-0.15px] text-ink-secondary">
-            Documents that write themselves into sync. Everyone on the same
+            Memos that write themselves into sync. Everyone on the same
             page, live.
           </p>
         </div>
@@ -40,7 +40,7 @@ export default function SignInPage() {
             href="/"
             className="mb-10 block w-fit text-heading font-medium tracking-[-0.15px] text-ink md:hidden"
           >
-            Docs
+            Memos
           </Link>
           <h1 className="text-title font-medium tracking-[-0.15px] text-ink">
             Sign in

@@ -77,7 +77,7 @@ export function HistoryPanel({ docId, open, onOpenChange }: HistoryPanelProps) {
           )}
 
           <p className="mt-8 text-label text-ink-tertiary">
-            Human edits are tracked in the document itself.
+            Human edits are tracked in the memo itself.
           </p>
         </div>
       </SheetContent>

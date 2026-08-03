@@ -184,7 +184,7 @@ async function getOrCreateIdentityClaim(
   });
   const claim = await ctx.db.get("identityClaims", claimId);
   if (!claim) {
-    throw new Error("Failed to start document sync");
+    throw new Error("Failed to start memo sync");
   }
   return claim;
 }
@@ -256,19 +256,19 @@ export const remove = mutation({
   handler: async (ctx, args) => {
     const doc = await ctx.db.get("documents", args.docId);
     if (!doc) {
-      throw new Error("Document not found");
+      throw new Error("Memo not found");
     }
     if (doc.deletedAt !== undefined) {
       return null;
     }
     if (!doc.ownerId) {
-      throw new Error("Unauthorized: only the owner can delete this document");
+      throw new Error("Unauthorized: only the owner can delete this memo");
     }
 
     const userId = await getAuthUserId(ctx);
     const subjects = viewerSubjectIds(userId, args.localOwnerId);
     if (!subjects.includes(doc.ownerId)) {
-      throw new Error("Unauthorized: only the owner can delete this document");
+      throw new Error("Unauthorized: only the owner can delete this memo");
     }
 
     await ctx.db.patch("documents", args.docId, { deletedAt: Date.now() });
@@ -478,7 +478,7 @@ export const claim = mutation({
     }
     const userId = await getAuthUserId(ctx);
     if (!userId) {
-      throw new Error("Sign in to sync documents");
+      throw new Error("Sign in to sync memos");
     }
 
     const identityClaim = await getOrCreateIdentityClaim(

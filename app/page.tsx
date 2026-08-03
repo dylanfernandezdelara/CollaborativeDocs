@@ -135,7 +135,7 @@ export default function HomePage() {
       setOpenSwipeId(null);
     } catch (error) {
       setDeleteError(
-        error instanceof Error ? error.message : "Couldn’t delete document",
+        error instanceof Error ? error.message : "Couldn’t delete memo",
       );
     } finally {
       setDeletingId(null);
@@ -150,17 +150,15 @@ export default function HomePage() {
         aria-label="Primary navigation"
         className="flex min-h-8 items-center justify-between gap-4"
       >
-        <span className="text-heading font-medium text-ink">Docs</span>
+        <h1 className="text-heading font-medium text-ink">Memos</h1>
         <AuthNav />
       </nav>
 
       <section className="mt-10 sm:mt-12">
-        <div className="flex items-baseline border-b-[1.5px] border-ink pb-1.5">
-          <h1 className="text-heading font-medium text-ink">Documents</h1>
-          <span className="flex-1" />
+        <div className="flex min-h-5 items-baseline justify-end border-b-[1.5px] border-ink pb-1.5">
           {listReady ? (
             <span className="text-caption text-ink-tertiary">
-              {docs.length} {docs.length === 1 ? "document" : "documents"}
+              {docs.length} {docs.length === 1 ? "memo" : "memos"}
             </span>
           ) : null}
         </div>
@@ -168,7 +166,7 @@ export default function HomePage() {
         {!listReady ? (
           <p className="mt-3 text-body text-ink-tertiary">Loading…</p>
         ) : docs.length === 0 ? (
-          <p className="mt-3 text-body text-ink-tertiary">No documents yet.</p>
+          <p className="mt-3 text-body text-ink-tertiary">No memos yet.</p>
         ) : (
           <ul className="mt-1">
             {docs.map((doc) => {
@@ -229,7 +227,7 @@ export default function HomePage() {
             onClick={() => void handleCreate()}
             disabled={creating || !loaded || !localId}
           >
-            {creating ? "Creating…" : "New document"}
+            {creating ? "Creating…" : "New memo"}
           </TextAction>
         </div>
       </section>
