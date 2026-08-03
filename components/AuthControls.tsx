@@ -1,6 +1,7 @@
 "use client";
 
 import { TextAction } from "@/components/TextAction";
+import { DotsSpinner } from "@/components/TypingIndicator";
 import { api } from "@/convex/_generated/api";
 import { rememberAuthProvider, useLastAuthProvider } from "@/lib/lastAuthProvider";
 import { useAuthActions } from "@convex-dev/auth/react";
@@ -38,12 +39,13 @@ export function AuthNav() {
       <TextAction
         variant="secondary"
         disabled={signingOut}
+        aria-busy={signingOut || undefined}
         onClick={() => {
           setSigningOut(true);
           void signOut().finally(() => setSigningOut(false));
         }}
       >
-        Sign out
+        {signingOut ? "Signing out…" : "Sign out"}
       </TextAction>
     </div>
   );
@@ -54,6 +56,7 @@ export function GitHubSignInButton() {
   const { signIn } = useAuthActions();
   const lastProvider = useLastAuthProvider();
   const [pending, setPending] = useState(false);
+  const [failed, setFailed] = useState(false);
 
   if (isAuthenticated) {
     return (
@@ -64,24 +67,40 @@ export function GitHubSignInButton() {
   }
 
   return (
-    <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-      <TextAction
-        variant="primary"
-        disabled={isLoading || pending}
-        onClick={() => {
-          setPending(true);
-          void signIn("github", { redirectTo: "/" }).finally(() =>
-            setPending(false),
-          );
-        }}
+    <div>
+      <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
+        <TextAction
+          variant="primary"
+          disabled={isLoading || pending}
+          aria-busy={pending || undefined}
+          onClick={() => {
+            setPending(true);
+            setFailed(false);
+            // Keep the pending state on success — the browser is about to
+            // navigate to GitHub, and flipping the label back first reads
+            // as if the tap did nothing.
+            void signIn("github", { redirectTo: "/" }).catch(() => {
+              setFailed(true);
+              setPending(false);
+            });
+          }}
+        >
+          {pending ? "Opening GitHub…" : "Continue with GitHub"}
+        </TextAction>
+        {pending ? (
+          <DotsSpinner />
+        ) : lastProvider === "github" ? (
+          <span className="text-caption tracking-[-0.15px] text-ink-tertiary">
+            Last used
+          </span>
+        ) : null}
+      </div>
+      <p
+        role="status"
+        className="mt-2 text-caption tracking-[-0.15px] text-ink-secondary empty:mt-0"
       >
-        {pending ? "Redirecting…" : "Continue with GitHub"}
-      </TextAction>
-      {lastProvider === "github" ? (
-        <span className="text-caption tracking-[-0.15px] text-ink-tertiary">
-          Last used
-        </span>
-      ) : null}
+        {failed ? "Couldn’t reach GitHub. Try again." : null}
+      </p>
     </div>
   );
 }

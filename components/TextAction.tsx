@@ -1,6 +1,7 @@
 "use client";
 
 import Link from "next/link";
+import { pressHaptic } from "@/lib/haptics";
 import { cn } from "@/lib/utils";
 import type { AriaAttributes, MouseEventHandler, ReactNode } from "react";
 
@@ -15,8 +16,10 @@ type TextActionProps = AriaAttributes & {
   children: ReactNode;
 };
 
+// Press feedback: `active:` dims instantly (transition-none while pressed) and
+// eases back over 200ms on release, so taps register even without hover.
 const baseClassName =
-  "inline cursor-pointer border-0 bg-transparent p-0 text-body font-medium tracking-[-0.15px] underline underline-offset-[3px] transition-colors duration-200 ease-out disabled:pointer-events-none disabled:opacity-50";
+  "inline cursor-pointer border-0 bg-transparent p-0 text-body font-medium tracking-[-0.15px] underline underline-offset-[3px] transition-[color,text-decoration-color,opacity] duration-200 ease-out active:opacity-55 active:transition-none disabled:pointer-events-none disabled:opacity-50 [-webkit-tap-highlight-color:transparent]";
 
 const variantClassName = {
   primary:
@@ -49,6 +52,7 @@ export function TextAction({
       <Link
         href={href}
         onClick={onClick}
+        onPointerDown={pressHaptic}
         className={cn(classes, disabled && "pointer-events-none opacity-50")}
         aria-disabled={disabled || undefined}
         tabIndex={disabled ? -1 : undefined}
@@ -63,6 +67,7 @@ export function TextAction({
     <button
       type="button"
       onClick={onClick}
+      onPointerDown={pressHaptic}
       disabled={disabled}
       className={classes}
       {...aria}
