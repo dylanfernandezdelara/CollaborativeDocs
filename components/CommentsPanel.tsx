@@ -211,7 +211,7 @@ export function CommentsPanel({
         <div className="space-y-4 p-4">
           {roots.length === 0 && composeAnchor === null && (
             <p className="text-body text-ink-tertiary">
-              Select text in the document to add a comment.
+              Select text in the memo to add a comment.
             </p>
           )}
 

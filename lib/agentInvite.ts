@@ -50,7 +50,7 @@ mkdir -p "\${WORKSPACE}/.cursor"
 
 WORKSPACE="\${WORKSPACE}" MCP_ID="\${MCP_ID}" MCP_URL="\${MCP_URL}" node -e 'const fs=require("fs");const path=require("path");const workspace=process.env.WORKSPACE;const mcpId=process.env.MCP_ID;const mcpUrl=process.env.MCP_URL;const cfg={mcpServers:{[mcpId]:{url:mcpUrl}}};fs.writeFileSync(path.join(workspace,".cursor","mcp.json"),JSON.stringify(cfg,null,2)+"\\n");'
 
-echo "Docs: configured \${AGENT_NAME}"
+echo "Memos: configured \${AGENT_NAME}"
 echo "Workspace: \${WORKSPACE}"
 echo "MCP server: \${MCP_ID}"
 

@@ -309,7 +309,7 @@ export default function DocPage({
   if (doc === null) {
     return (
       <div className="flex min-h-screen flex-col items-center justify-center gap-3">
-        <p className="text-body text-ink-secondary">Document not found.</p>
+        <p className="text-body text-ink-secondary">Memo not found.</p>
         <Link href="/" className="text-body text-ink underline">
           Back home
         </Link>
@@ -324,8 +324,8 @@ export default function DocPage({
       <header className="pointer-events-none sticky top-4 z-30 flex items-start justify-between px-8 sm:top-6">
         <Link
           href="/"
-          aria-label="All documents"
-          title="All documents"
+          aria-label="All memos"
+          title="All memos"
           className="pointer-events-auto flex size-8 shrink-0 items-center justify-center rounded-full border border-ink/10 bg-page-elevated/90 text-ink-secondary backdrop-blur-sm transition-colors hover:bg-surface-hover hover:text-ink"
         >
           <HomeIcon className="size-3.5" />
@@ -379,7 +379,7 @@ export default function DocPage({
                 className="flex w-full items-center gap-2 rounded-[6px] px-2.5 py-1.5 text-body tracking-[-0.15px] text-ink-secondary transition-colors hover:bg-surface-hover hover:text-ink"
                 onClick={() => setOverflowOpen(false)}
               >
-                All documents
+                All memos
               </Link>
             </PopoverContent>
           </Popover>

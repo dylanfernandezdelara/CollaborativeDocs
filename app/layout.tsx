@@ -4,7 +4,7 @@ import { ConvexClientProvider } from "@/components/ConvexClientProvider";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Docs",
+  title: "Memos",
 };
 
 export default function RootLayout({
