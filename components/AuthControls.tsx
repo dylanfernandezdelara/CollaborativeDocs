@@ -82,14 +82,22 @@ export function GitHubSignInButton() {
   }
 
   const pending = status === "pending";
-  const unavailable = githubAvailable === false;
+  // Treat loading (undefined) as unavailable so we never offer a click that
+  // races an empty provider list.
+  const canSignIn = githubAvailable === true;
+  const statusMessage =
+    githubAvailable === false
+      ? "GitHub sign-in isn't configured for this deployment."
+      : status === "failed"
+        ? "Sign-in failed. Try again."
+        : null;
 
   return (
     <div>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <TextAction
           variant="primary"
-          disabled={isLoading || pending || unavailable}
+          disabled={isLoading || pending || !canSignIn}
           aria-busy={pending || undefined}
           onClick={() => {
             setStatus("pending");
@@ -109,7 +117,7 @@ export function GitHubSignInButton() {
           {pending ? "Opening GitHub…" : "Continue with GitHub"}
         </TextAction>
         {pending ? <DotsSpinner /> : null}
-        {!pending && !unavailable && lastProvider === "github" ? (
+        {!pending && canSignIn && lastProvider === "github" ? (
           <span className="text-caption tracking-[-0.15px] text-ink-tertiary">
             Last used
           </span>
@@ -119,11 +127,7 @@ export function GitHubSignInButton() {
         role="status"
         className="mt-2 text-caption tracking-[-0.15px] text-ink-secondary empty:mt-0"
       >
-        {unavailable
-          ? "GitHub sign-in isn't configured for this deployment."
-          : status === "failed"
-            ? "Sign-in failed. Try again."
-            : null}
+        {statusMessage}
       </p>
     </div>
   );
