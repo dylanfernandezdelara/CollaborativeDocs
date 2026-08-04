@@ -57,6 +57,7 @@ export function GitHubSignInButton() {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const { signIn } = useAuthActions();
   const lastProvider = useLastAuthProvider();
+  const githubAvailable = useQuery(api.authStatus.githubSignInAvailable);
   const [status, setStatus] = useState<SignInStatus>("idle");
 
   // When the user abandons the GitHub page and comes back, bfcache restores
@@ -81,13 +82,14 @@ export function GitHubSignInButton() {
   }
 
   const pending = status === "pending";
+  const unavailable = githubAvailable === false;
 
   return (
     <div>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <TextAction
           variant="primary"
-          disabled={isLoading || pending}
+          disabled={isLoading || pending || unavailable}
           aria-busy={pending || undefined}
           onClick={() => {
             setStatus("pending");
@@ -107,7 +109,7 @@ export function GitHubSignInButton() {
           {pending ? "Opening GitHub…" : "Continue with GitHub"}
         </TextAction>
         {pending ? <DotsSpinner /> : null}
-        {!pending && lastProvider === "github" ? (
+        {!pending && !unavailable && lastProvider === "github" ? (
           <span className="text-caption tracking-[-0.15px] text-ink-tertiary">
             Last used
           </span>
@@ -117,7 +119,11 @@ export function GitHubSignInButton() {
         role="status"
         className="mt-2 text-caption tracking-[-0.15px] text-ink-secondary empty:mt-0"
       >
-        {status === "failed" ? "Sign-in failed. Try again." : null}
+        {unavailable
+          ? "GitHub sign-in isn't configured for this deployment."
+          : status === "failed"
+            ? "Sign-in failed. Try again."
+            : null}
       </p>
     </div>
   );
