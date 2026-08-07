@@ -80,6 +80,22 @@ if (shouldDeployConvex) {
   });
 
   try {
+    // Sync Convex Auth env (JWT keys, SITE_URL, optional AUTH_GITHUB_*) before
+    // deploying functions so the GitHub provider can register on this isolate.
+    console.log("Ensuring Convex Auth environment variables…");
+    const authEnvResult = spawnSync(
+      "node",
+      ["scripts/ensure-convex-auth-env.mjs", "--env-file", envFile],
+      {
+        stdio: "inherit",
+        env: process.env,
+        shell: false,
+      },
+    );
+    if ((authEnvResult.status ?? 1) !== 0) {
+      process.exit(authEnvResult.status ?? 1);
+    }
+
     if (shouldOneShotPurgeAll) {
       // Deploy functions first, run the purge, then build Next — `deploy --cmd`
       // cannot insert a step between push and the Next build.
