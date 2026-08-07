@@ -57,6 +57,7 @@ export function GitHubSignInButton() {
   const { isLoading, isAuthenticated } = useConvexAuth();
   const { signIn } = useAuthActions();
   const lastProvider = useLastAuthProvider();
+  const githubAvailable = useQuery(api.authStatus.githubSignInAvailable);
   const [status, setStatus] = useState<SignInStatus>("idle");
 
   // When the user abandons the GitHub page and comes back, bfcache restores
@@ -81,14 +82,24 @@ export function GitHubSignInButton() {
   }
 
   const pending = status === "pending";
+  // Treat loading (undefined) as unavailable so we never offer a click that
+  // races an empty provider list.
+  const canSignIn = githubAvailable === true;
+  const configPending = githubAvailable === undefined;
+  const statusMessage =
+    githubAvailable === false
+      ? "GitHub sign-in isn't configured yet. Set AUTH_GITHUB_ID and AUTH_GITHUB_SECRET on the Convex deployment."
+      : status === "failed"
+        ? "Sign-in failed. Try again."
+        : null;
 
   return (
     <div>
       <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1">
         <TextAction
           variant="primary"
-          disabled={isLoading || pending}
-          aria-busy={pending || undefined}
+          disabled={isLoading || pending || !canSignIn}
+          aria-busy={pending || configPending || undefined}
           onClick={() => {
             setStatus("pending");
             // Stay pending on success — the browser is about to navigate to
@@ -104,10 +115,14 @@ export function GitHubSignInButton() {
             );
           }}
         >
-          {pending ? "Opening GitHub…" : "Continue with GitHub"}
+          {pending
+            ? "Opening GitHub…"
+            : configPending
+              ? "Checking GitHub…"
+              : "Continue with GitHub"}
         </TextAction>
-        {pending ? <DotsSpinner /> : null}
-        {!pending && lastProvider === "github" ? (
+        {pending || configPending ? <DotsSpinner /> : null}
+        {!pending && canSignIn && lastProvider === "github" ? (
           <span className="text-caption tracking-[-0.15px] text-ink-tertiary">
             Last used
           </span>
@@ -117,7 +132,7 @@ export function GitHubSignInButton() {
         role="status"
         className="mt-2 text-caption tracking-[-0.15px] text-ink-secondary empty:mt-0"
       >
-        {status === "failed" ? "Sign-in failed. Try again." : null}
+        {statusMessage}
       </p>
     </div>
   );

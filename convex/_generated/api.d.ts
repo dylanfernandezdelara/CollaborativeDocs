@@ -11,6 +11,7 @@
 import type * as agentDoc from "../agentDoc.js";
 import type * as agents from "../agents.js";
 import type * as auth from "../auth.js";
+import type * as authStatus from "../authStatus.js";
 import type * as collaborators from "../collaborators.js";
 import type * as comments from "../comments.js";
 import type * as documents from "../documents.js";
@@ -20,6 +21,7 @@ import type * as intents from "../intents.js";
 import type * as lib_access from "../lib/access.js";
 import type * as lib_agentAuth from "../lib/agentAuth.js";
 import type * as lib_collaboratorSeats from "../lib/collaboratorSeats.js";
+import type * as lib_githubAuthConfig from "../lib/githubAuthConfig.js";
 import type * as lib_lastEdit from "../lib/lastEdit.js";
 import type * as lib_markdown from "../lib/markdown.js";
 import type * as lib_owner from "../lib/owner.js";
@@ -39,6 +41,7 @@ declare const fullApi: ApiFromModules<{
   agentDoc: typeof agentDoc;
   agents: typeof agents;
   auth: typeof auth;
+  authStatus: typeof authStatus;
   collaborators: typeof collaborators;
   comments: typeof comments;
   documents: typeof documents;
@@ -48,6 +51,7 @@ declare const fullApi: ApiFromModules<{
   "lib/access": typeof lib_access;
   "lib/agentAuth": typeof lib_agentAuth;
   "lib/collaboratorSeats": typeof lib_collaboratorSeats;
+  "lib/githubAuthConfig": typeof lib_githubAuthConfig;
   "lib/lastEdit": typeof lib_lastEdit;
   "lib/markdown": typeof lib_markdown;
   "lib/owner": typeof lib_owner;
