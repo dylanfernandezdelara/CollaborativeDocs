@@ -7,12 +7,12 @@ type FocusPhase = "title" | "body" | null;
 
 /**
  * Create-flow focus: title first when `?new=1`, then body after Enter.
- * Existing memos start on the body once the editor mounts.
+ * Existing memos leave focus alone until the user clicks in.
  */
 export function useMemoFocus(docId: string, isNewMemo: boolean) {
   const router = useRouter();
   const titleAutoFocus = useRef(isNewMemo).current;
-  const [phase, setPhase] = useState<FocusPhase>(isNewMemo ? "title" : "body");
+  const [phase, setPhase] = useState<FocusPhase>(isNewMemo ? "title" : null);
 
   useEffect(() => {
     if (!isNewMemo) return;

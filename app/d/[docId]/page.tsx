@@ -84,6 +84,16 @@ function FocusEditorOnMount({ enabled }: { enabled: boolean }) {
 
   useEffect(() => {
     if (!enabled || !editor || didFocusRef.current) return;
+    const active = document.activeElement;
+    // Don't yank focus if the user is already in the title (or another control).
+    if (
+      active instanceof HTMLElement &&
+      active !== document.body &&
+      !editor.view.dom.contains(active)
+    ) {
+      didFocusRef.current = true;
+      return;
+    }
     didFocusRef.current = true;
     editor.commands.focus("start");
   }, [editor, enabled]);
@@ -295,13 +305,17 @@ export default function DocPage({
     return () => clearInterval(id);
   }, []);
 
+  const tabTitle = doc?.title;
   useEffect(() => {
-    if (!doc) return;
-    document.title = `${displayMemoTitle(doc.title)} · Memos`;
+    if (tabTitle === undefined) return;
+    document.title = `${displayMemoTitle(tabTitle)} · Memos`;
+  }, [tabTitle]);
+
+  useEffect(() => {
     return () => {
       document.title = "Memos";
     };
-  }, [doc]);
+  }, []);
 
   const onlineAgents = useMemo(
     () =>
