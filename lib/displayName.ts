@@ -43,6 +43,14 @@ export function guestDisplayName(ownerKey: string | null): string {
   return color ? `Guest ${color}` : "Guest";
 }
 
+/** First whitespace-separated token of a full name, or null if empty. */
+export function firstName(fullName: string | null | undefined): string | null {
+  const trimmed = fullName?.trim();
+  if (!trimmed) return null;
+  const token = trimmed.split(/\s+/)[0];
+  return token || null;
+}
+
 /** Prefer GitHub profile name, else a stable color-word guest label from the cookie. */
 export function resolveDisplayName(options: {
   githubName?: string | null;

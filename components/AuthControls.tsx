@@ -3,6 +3,7 @@
 import { DotsSpinner } from "@/components/DotsSpinner";
 import { TextAction } from "@/components/TextAction";
 import { api } from "@/convex/_generated/api";
+import { firstName } from "@/lib/displayName";
 import { rememberAuthProvider, useLastAuthProvider } from "@/lib/lastAuthProvider";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useQuery } from "convex/react";
@@ -34,7 +35,7 @@ export function AuthNav() {
   return (
     <div className="flex min-w-0 items-center gap-3">
       <span className="max-w-32 truncate text-label tracking-[-0.15px] text-ink-tertiary">
-        {user?.name ?? user?.email ?? "Signed in"}
+        {firstName(user?.name) ?? user?.email ?? "Signed in"}
       </span>
       <TextAction
         variant="secondary"
