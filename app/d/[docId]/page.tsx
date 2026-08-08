@@ -84,16 +84,6 @@ function FocusEditorOnMount({ enabled }: { enabled: boolean }) {
 
   useEffect(() => {
     if (!enabled || !editor || didFocusRef.current) return;
-    const active = document.activeElement;
-    // Don't yank focus if the user is already in the title (or another control).
-    if (
-      active instanceof HTMLElement &&
-      active !== document.body &&
-      !editor.view.dom.contains(active)
-    ) {
-      didFocusRef.current = true;
-      return;
-    }
     didFocusRef.current = true;
     editor.commands.focus("start");
   }, [editor, enabled]);

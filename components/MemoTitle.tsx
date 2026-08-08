@@ -129,6 +129,8 @@ export function MemoTitle({
     if (event.key === "Enter") {
       event.preventDefault();
       flushNow();
+      // Blur first so the body handoff isn't fighting the title caret.
+      inputRef.current?.blur();
       onEnter?.();
       return;
     }
