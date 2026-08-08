@@ -1,7 +1,8 @@
 import type { Id } from "../_generated/dataModel";
 import type { MutationCtx } from "../_generated/server";
+import { MAX_DISPLAY_NAME_LENGTH } from "../../lib/displayName";
 
-export const MAX_EDITOR_NAME_LENGTH = 64;
+export const MAX_EDITOR_NAME_LENGTH = MAX_DISPLAY_NAME_LENGTH;
 
 /** Trim and bound editor labels before writing denormalized last-edit fields. */
 export function normalizeEditorName(name: string): string {

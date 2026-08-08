@@ -1,3 +1,6 @@
+/** Bound for presence, comments, last-edit, and guest rename labels. */
+export const MAX_DISPLAY_NAME_LENGTH = 64;
+
 /** Color-word guest names, all 7 characters or fewer. */
 const GUEST_COLORS = [
   "Amber",

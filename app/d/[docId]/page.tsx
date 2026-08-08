@@ -2,6 +2,7 @@
 
 import { AvatarStack } from "@/components/AvatarStack";
 import { CommentsPanel } from "@/components/CommentsPanel";
+import { GuestNameControl } from "@/components/GuestNameControl";
 import {
   createHighlightExtension,
   refreshHighlights,
@@ -43,8 +44,9 @@ import { createPortal } from "react-dom";
 /**
  * Throttled last-edit signal for the docs index (~5s while actively editing).
  * Ignores collab receives (`addToHistory: false`) so remote/agent sync does
- * not attribute last-edit to the focused local viewer. Guests pass their
- * cookie-backed display name; auth profile names are still resolved server-side.
+ * not attribute last-edit to the focused local viewer. Guests may pass a
+ * cookie-backed display name; authenticated editors omit it so the server
+ * uses the auth profile name.
  */
 function DocumentTouch({
   docId,
@@ -53,7 +55,8 @@ function DocumentTouch({
 }: {
   docId: Id<"documents">;
   localOwnerId?: string;
-  displayName: string;
+  /** Guest-only label. Omit when signed in. */
+  displayName?: string;
 }) {
   const { editor } = useCurrentEditor();
   const touch = useMutation(api.documents.touch);
@@ -72,7 +75,7 @@ function DocumentTouch({
       void touch({
         docId,
         localOwnerId: localId,
-        displayName: displayName || undefined,
+        displayName,
       });
     };
 
@@ -375,6 +378,7 @@ export default function DocPage({
           Memos
         </TextAction>
         <div className="pointer-events-auto flex shrink-0 items-center gap-3">
+          {!isAuthenticated && !authLoading ? <GuestNameControl /> : null}
           <AvatarStack
             humans={presenceState ?? []}
             agents={onlineAgents}
@@ -461,7 +465,9 @@ export default function DocPage({
                 <DocumentTouch
                   docId={docId}
                   localOwnerId={localId}
-                  displayName={displayName}
+                  displayName={
+                    isAuthenticated ? undefined : displayName || undefined
+                  }
                 />
               ) : null}
               <SelectionCommentButton

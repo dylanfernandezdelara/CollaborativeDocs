@@ -1,108 +1,14 @@
 "use client";
 
 import { DotsSpinner } from "@/components/DotsSpinner";
+import { GuestNameControl } from "@/components/GuestNameControl";
 import { TextAction } from "@/components/TextAction";
 import { api } from "@/convex/_generated/api";
-import { firstName, guestDisplayName, resolveDisplayName } from "@/lib/displayName";
-import {
-  MAX_GUEST_NAME_LENGTH,
-  setGuestName,
-  useGuestName,
-} from "@/lib/guestName";
+import { firstName } from "@/lib/displayName";
 import { rememberAuthProvider, useLastAuthProvider } from "@/lib/lastAuthProvider";
-import { useOwnerKey } from "@/lib/ownerKey";
 import { useAuthActions } from "@convex-dev/auth/react";
 import { useConvexAuth, useQuery } from "convex/react";
-import {
-  useEffect,
-  useRef,
-  useState,
-  type KeyboardEvent,
-} from "react";
-
-function GuestNameControl() {
-  const { ownerKey, loaded } = useOwnerKey();
-  const customName = useGuestName();
-  const displayName = resolveDisplayName({
-    customGuestName: customName,
-    ownerKey,
-  });
-  const [editing, setEditing] = useState(false);
-  const [draft, setDraft] = useState(displayName);
-  const inputRef = useRef<HTMLInputElement | null>(null);
-
-  useEffect(() => {
-    if (!editing) return;
-    const input = inputRef.current;
-    if (!input) return;
-    input.focus();
-    input.select();
-  }, [editing]);
-
-  function startEditing() {
-    setDraft(displayName);
-    setEditing(true);
-  }
-
-  function commit() {
-    const fallback = guestDisplayName(ownerKey);
-    const next = draft.trim() || fallback;
-    setGuestName(next === fallback ? "" : next);
-    setDraft(next === fallback ? fallback : next);
-    setEditing(false);
-  }
-
-  function cancel() {
-    setDraft(displayName);
-    setEditing(false);
-  }
-
-  function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
-    if (event.key === "Enter") {
-      event.preventDefault();
-      commit();
-      return;
-    }
-    if (event.key === "Escape") {
-      event.preventDefault();
-      cancel();
-    }
-  }
-
-  if (!loaded) {
-    return <span className="h-7 w-20" aria-hidden="true" />;
-  }
-
-  if (editing) {
-    return (
-      <input
-        ref={inputRef}
-        type="text"
-        value={draft}
-        onChange={(event) =>
-          setDraft(event.target.value.slice(0, MAX_GUEST_NAME_LENGTH))
-        }
-        onBlur={commit}
-        onKeyDown={handleKeyDown}
-        aria-label="Your guest name"
-        maxLength={MAX_GUEST_NAME_LENGTH}
-        className="max-w-36 border-0 border-b border-primary bg-transparent p-0 text-label tracking-[-0.15px] text-ink caret-ink outline-none"
-      />
-    );
-  }
-
-  return (
-    <button
-      type="button"
-      onClick={startEditing}
-      aria-label="Rename guest account"
-      title="Rename"
-      className="max-w-32 truncate border-0 bg-transparent p-0 text-left text-label tracking-[-0.15px] text-ink-tertiary transition-colors duration-200 ease-out hover:text-ink-secondary"
-    >
-      {displayName}
-    </button>
-  );
-}
+import { useEffect, useState } from "react";
 
 export function AuthNav() {
   const { isLoading, isAuthenticated } = useConvexAuth();
