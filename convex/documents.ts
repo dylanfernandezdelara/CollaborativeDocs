@@ -38,10 +38,10 @@ const purgePhaseValidator = v.union(
   v.literal("finalize"),
 );
 
-/** Empty TipTap/ProseMirror document for new memos. */
+/** Empty TipTap/ProseMirror document for new memos (`doc` requires `block+`). */
 const EMPTY_DOC = {
   type: "doc",
-  content: [] as const,
+  content: [{ type: "paragraph" }],
 };
 
 /** Public shape — never expose ownerId (cookie UUID is the anonymous secret). */
