@@ -1,4 +1,5 @@
 import { Mark, mergeAttributes } from "@tiptap/core";
+import Placeholder from "@tiptap/extension-placeholder";
 import StarterKit from "@tiptap/starter-kit";
 import { Table } from "@tiptap/extension-table";
 import { TableRow } from "@tiptap/extension-table-row";
@@ -38,6 +39,10 @@ export const AgentEdit = Mark.create({
 
 export const editorExtensions = [
   StarterKit,
+  Placeholder.configure({
+    placeholder: "Start writing…",
+    emptyEditorClass: "is-editor-empty",
+  }),
   Table.configure({ resizable: false }),
   TableRow,
   TableCell,

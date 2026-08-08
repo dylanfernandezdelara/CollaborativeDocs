@@ -202,6 +202,15 @@ async function continueIdentityClaim(
   return result;
 }
 
+const MAX_TITLE_LENGTH = 200;
+
+/** Normalize a memo title for storage; empty → `"Untitled"`. */
+export function normalizeMemoTitle(raw: string): string {
+  const trimmed = raw.replace(/\s+/g, " ").trim();
+  if (!trimmed) return "Untitled";
+  return trimmed.slice(0, MAX_TITLE_LENGTH);
+}
+
 export const create = mutation({
   args: {
     title: v.string(),
@@ -215,13 +224,39 @@ export const create = mutation({
     }
 
     const docId = await ctx.db.insert("documents", {
-      title: args.title,
+      title: normalizeMemoTitle(args.title),
       createdAt: Date.now(),
       ownerId,
     });
 
     await prosemirrorSync.create(ctx, docId, EMPTY_DOC);
     return docId;
+  },
+});
+
+/**
+ * Update the memo title. Open-by-link like the body (same as `get` / sync) —
+ * anyone with the document URL can rename.
+ */
+export const updateTitle = mutation({
+  args: {
+    docId: v.id("documents"),
+    title: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const doc = await ctx.db.get("documents", args.docId);
+    if (!doc || doc.deletedAt !== undefined) {
+      throw new Error("Memo not found");
+    }
+
+    const title = normalizeMemoTitle(args.title);
+    if (title === doc.title) {
+      return null;
+    }
+
+    await ctx.db.patch("documents", args.docId, { title });
+    return null;
   },
 });
 

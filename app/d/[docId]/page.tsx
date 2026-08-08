@@ -8,6 +8,7 @@ import {
 } from "@/components/HighlightExtension";
 import { getHighlights, setHighlights } from "@/lib/highlightStore";
 import { HistoryPanel } from "@/components/HistoryPanel";
+import { MemoTitle } from "@/components/MemoTitle";
 import { ShareDialog } from "@/components/ShareDialog";
 import { TextAction, textActionClassName } from "@/components/TextAction";
 import {
@@ -32,8 +33,8 @@ import {
 import type { Editor } from "@tiptap/core";
 import type { Transaction } from "@tiptap/pm/state";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { HomeIcon } from "lucide-react";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -72,6 +73,19 @@ function DocumentTouch({
       editor.off("update", onUpdate);
     };
   }, [docId, editor, localId, touch]);
+
+  return null;
+}
+
+function FocusEditorOnMount({ enabled }: { enabled: boolean }) {
+  const { editor } = useCurrentEditor();
+  const didFocusRef = useRef(false);
+
+  useEffect(() => {
+    if (!enabled || !editor || didFocusRef.current) return;
+    didFocusRef.current = true;
+    editor.commands.focus("start");
+  }, [editor, enabled]);
 
   return null;
 }
@@ -210,7 +224,7 @@ export default function DocPage({
   searchParams,
 }: {
   params: Promise<{ docId: string }>;
-  searchParams: Promise<{ h?: string | string[] }>;
+  searchParams: Promise<{ h?: string | string[]; new?: string | string[] }>;
 }) {
   const { docId: docIdParam } = use(params);
   const resolvedSearch = use(searchParams);
@@ -218,6 +232,11 @@ export default function DocPage({
   const inviteToken = Array.isArray(resolvedSearch.h)
     ? resolvedSearch.h[0]
     : resolvedSearch.h;
+  const isNewMemo =
+    (Array.isArray(resolvedSearch.new)
+      ? resolvedSearch.new[0]
+      : resolvedSearch.new) === "1";
+  const router = useRouter();
 
   const { ownerKey, loaded: ownerLoaded } = useOwnerKey();
   const localId = ownerKey ? localOwnerId(ownerKey) : undefined;
@@ -256,6 +275,8 @@ export default function DocPage({
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [composeAnchor, setComposeAnchor] = useState<string | null>(null);
+  const [focusTitle, setFocusTitle] = useState(isNewMemo);
+  const [focusBody, setFocusBody] = useState(false);
   const editorRef = useRef<Editor | null>(null);
   const highlightExtension = useMemo(
     () => createHighlightExtension(getHighlights),
@@ -272,6 +293,24 @@ export default function DocPage({
     return () => clearInterval(id);
   }, []);
 
+  // Drop `?new=1` after first paint so refresh doesn't re-select the title.
+  useEffect(() => {
+    if (!isNewMemo) return;
+    router.replace(`/d/${docId}`, { scroll: false });
+  }, [docId, isNewMemo, router]);
+
+  useEffect(() => {
+    if (!doc) return;
+    const label =
+      typeof doc.title === "string" && doc.title.trim()
+        ? doc.title.trim()
+        : "Untitled";
+    document.title = `${label} · Memos`;
+    return () => {
+      document.title = "Memos";
+    };
+  }, [doc]);
+
   const onlineAgents = useMemo(
     () =>
       (agents ?? [])
@@ -283,6 +322,11 @@ export default function DocPage({
   function handleStartComment(anchorText: string) {
     setComposeAnchor(anchorText);
     setCommentsOpen(true);
+  }
+
+  function handleTitleEnter() {
+    setFocusTitle(false);
+    setFocusBody(true);
   }
 
   const overflowActions: Array<{
@@ -322,14 +366,14 @@ export default function DocPage({
       className={`min-h-screen ${commentsOpen ? "md:pr-[320px]" : ""}`}
     >
       <header className="pointer-events-none sticky top-4 z-30 flex items-start justify-between px-8 sm:top-6">
-        <Link
+        <TextAction
           href="/"
+          variant="secondary"
           aria-label="All memos"
-          title="All memos"
-          className="pointer-events-auto flex size-8 shrink-0 items-center justify-center rounded-full border border-ink/10 bg-page-elevated/90 text-ink-secondary backdrop-blur-sm transition-colors hover:bg-surface-hover hover:text-ink"
+          className="pointer-events-auto"
         >
-          <HomeIcon className="size-3.5" />
-        </Link>
+          Memos
+        </TextAction>
         <div className="pointer-events-auto flex shrink-0 items-center gap-3">
           <AvatarStack
             humans={presenceState ?? []}
@@ -387,6 +431,12 @@ export default function DocPage({
       </header>
 
       <main className="mx-auto max-w-[640px] px-8 pt-10 pb-20 sm:pt-16 sm:pb-24">
+        <MemoTitle
+          docId={docId}
+          title={doc.title}
+          autoFocus={focusTitle}
+          onEnter={handleTitleEnter}
+        />
         {sync.isLoading ? (
           <p className="text-body text-ink-tertiary">Loading…</p>
         ) : sync.initialContent !== null ? (
@@ -404,6 +454,7 @@ export default function DocPage({
             }}
           >
             <EditorContent editor={null} />
+            <FocusEditorOnMount enabled={focusBody} />
             {ownerLoaded && localId ? (
               <DocumentTouch docId={docId} localOwnerId={localId} />
             ) : null}

@@ -117,10 +117,10 @@ export default function HomePage() {
     setCreating(true);
     try {
       const docId = await createDoc({
-        title: "Product Roadmap",
+        title: "Untitled",
         localOwnerId: localId,
       });
-      router.push(`/d/${docId}`);
+      router.push(`/d/${docId}?new=1`);
     } finally {
       setCreating(false);
     }
@@ -163,7 +163,9 @@ export default function HomePage() {
         {!listReady ? (
           <p className="mt-3 text-body text-ink-tertiary">Loading…</p>
         ) : docs.length === 0 ? (
-          <p className="mt-3 text-body text-ink-tertiary">No memos yet.</p>
+          <p className="mt-3 text-body text-ink-tertiary">
+            No memos yet. Start with a blank page below.
+          </p>
         ) : (
           <ul className="mt-1">
             {docs.map((doc) => {
