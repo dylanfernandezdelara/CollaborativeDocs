@@ -224,11 +224,25 @@
 
 .ProseMirror {
   outline: none;
-  min-height: 60vh;
+  min-height: 55vh;
   overflow-wrap: anywhere;
   word-break: break-word;
   /* ≥16px also prevents iOS Safari's focus auto-zoom on the editable area. */
   font-size: 17px;
+  caret-color: var(--text-primary);
+}
+
+.ProseMirror > p:first-child {
+  margin-top: 0;
+}
+
+.ProseMirror p.is-editor-empty:first-child::before {
+  content: attr(data-placeholder);
+  float: left;
+  height: 0;
+  color: var(--text-tertiary);
+  pointer-events: none;
+  font-weight: 400;
 }
 
 @media (min-width: 40rem) {

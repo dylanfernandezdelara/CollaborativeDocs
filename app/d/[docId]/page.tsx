@@ -8,6 +8,7 @@ import {
 } from "@/components/HighlightExtension";
 import { getHighlights, setHighlights } from "@/lib/highlightStore";
 import { HistoryPanel } from "@/components/HistoryPanel";
+import { MemoTitle } from "@/components/MemoTitle";
 import { ShareDialog } from "@/components/ShareDialog";
 import { TextAction, textActionClassName } from "@/components/TextAction";
 import {
@@ -19,9 +20,11 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { editorExtensions } from "@/lib/editorExtensions";
 import { resolveDisplayName } from "@/lib/displayName";
+import { displayMemoTitle } from "@/lib/memoTitle";
 import { localOwnerId, useOwnerKey } from "@/lib/ownerKey";
 import { LIVE_AGENT_MS, TOUCH_THROTTLE_MS } from "@/lib/presenceWindows";
 import { useAcceptCollaboratorInvite } from "@/lib/useAcceptCollaboratorInvite";
+import { useMemoFocus } from "@/lib/useMemoFocus";
 import { useTiptapSync } from "@convex-dev/prosemirror-sync/tiptap";
 import usePresence from "@convex-dev/presence/react";
 import {
@@ -32,7 +35,6 @@ import {
 import type { Editor } from "@tiptap/core";
 import type { Transaction } from "@tiptap/pm/state";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
-import { HomeIcon } from "lucide-react";
 import Link from "next/link";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
@@ -72,6 +74,19 @@ function DocumentTouch({
       editor.off("update", onUpdate);
     };
   }, [docId, editor, localId, touch]);
+
+  return null;
+}
+
+function FocusEditorOnMount({ enabled }: { enabled: boolean }) {
+  const { editor } = useCurrentEditor();
+  const didFocusRef = useRef(false);
+
+  useEffect(() => {
+    if (!enabled || !editor || didFocusRef.current) return;
+    didFocusRef.current = true;
+    editor.commands.focus("start");
+  }, [editor, enabled]);
 
   return null;
 }
@@ -210,7 +225,7 @@ export default function DocPage({
   searchParams,
 }: {
   params: Promise<{ docId: string }>;
-  searchParams: Promise<{ h?: string | string[] }>;
+  searchParams: Promise<{ h?: string | string[]; new?: string | string[] }>;
 }) {
   const { docId: docIdParam } = use(params);
   const resolvedSearch = use(searchParams);
@@ -218,6 +233,14 @@ export default function DocPage({
   const inviteToken = Array.isArray(resolvedSearch.h)
     ? resolvedSearch.h[0]
     : resolvedSearch.h;
+  const isNewMemo =
+    (Array.isArray(resolvedSearch.new)
+      ? resolvedSearch.new[0]
+      : resolvedSearch.new) === "1";
+  const { titleAutoFocus, focusBody, onTitleEnter } = useMemoFocus(
+    docId,
+    isNewMemo,
+  );
 
   const { ownerKey, loaded: ownerLoaded } = useOwnerKey();
   const localId = ownerKey ? localOwnerId(ownerKey) : undefined;
@@ -272,6 +295,18 @@ export default function DocPage({
     return () => clearInterval(id);
   }, []);
 
+  const tabTitle = doc?.title;
+  useEffect(() => {
+    if (tabTitle === undefined) return;
+    document.title = `${displayMemoTitle(tabTitle)} · Memos`;
+  }, [tabTitle]);
+
+  useEffect(() => {
+    return () => {
+      document.title = "Memos";
+    };
+  }, []);
+
   const onlineAgents = useMemo(
     () =>
       (agents ?? [])
@@ -321,15 +356,15 @@ export default function DocPage({
     <div
       className={`min-h-screen ${commentsOpen ? "md:pr-[320px]" : ""}`}
     >
-      <header className="pointer-events-none sticky top-4 z-30 flex items-start justify-between px-8 sm:top-6">
-        <Link
+      <header className="pointer-events-none sticky top-0 z-30 flex items-start justify-between bg-gradient-to-b from-page from-65% to-transparent px-8 pt-4 pb-8 sm:pt-6 sm:pb-10">
+        <TextAction
           href="/"
+          variant="secondary"
           aria-label="All memos"
-          title="All memos"
-          className="pointer-events-auto flex size-8 shrink-0 items-center justify-center rounded-full border border-ink/10 bg-page-elevated/90 text-ink-secondary backdrop-blur-sm transition-colors hover:bg-surface-hover hover:text-ink"
+          className="pointer-events-auto"
         >
-          <HomeIcon className="size-3.5" />
-        </Link>
+          Memos
+        </TextAction>
         <div className="pointer-events-auto flex shrink-0 items-center gap-3">
           <AvatarStack
             humans={presenceState ?? []}
@@ -386,34 +421,44 @@ export default function DocPage({
         </div>
       </header>
 
-      <main className="mx-auto max-w-[640px] px-8 pt-10 pb-20 sm:pt-16 sm:pb-24">
-        {sync.isLoading ? (
-          <p className="text-body text-ink-tertiary">Loading…</p>
-        ) : sync.initialContent !== null ? (
-          <EditorProvider
-            extensions={extensions}
-            content={sync.initialContent}
-            onCreate={({ editor }) => {
-              editorRef.current = editor;
-            }}
-            onDestroy={() => {
-              editorRef.current = null;
-            }}
-            editorContainerProps={{
-              className: "prose-editor",
-            }}
-          >
-            <EditorContent editor={null} />
-            {ownerLoaded && localId ? (
-              <DocumentTouch docId={docId} localOwnerId={localId} />
-            ) : null}
-            <SelectionCommentButton
-              onComment={handleStartComment}
-              hideOnMobile={commentsOpen}
-            />
-            <EditorHighlights intents={intents} comments={comments} />
-          </EditorProvider>
-        ) : null}
+      <main className="mx-auto max-w-[640px] px-8 pt-14 pb-24 sm:pt-20 sm:pb-28">
+        <div className="animate-in fade-in duration-300 ease-out fill-mode-both">
+          <MemoTitle
+            docId={docId}
+            title={doc.title}
+            autoFocus={titleAutoFocus}
+            onEnter={onTitleEnter}
+          />
+          {sync.isLoading ? (
+            <p className="text-body text-ink-tertiary">Loading…</p>
+          ) : sync.initialContent !== null ? (
+            <EditorProvider
+              extensions={extensions}
+              content={sync.initialContent}
+              autofocus={false}
+              onCreate={({ editor }) => {
+                editorRef.current = editor;
+              }}
+              onDestroy={() => {
+                editorRef.current = null;
+              }}
+              editorContainerProps={{
+                className: "prose-editor",
+              }}
+            >
+              <EditorContent editor={null} />
+              <FocusEditorOnMount enabled={focusBody} />
+              {ownerLoaded && localId ? (
+                <DocumentTouch docId={docId} localOwnerId={localId} />
+              ) : null}
+              <SelectionCommentButton
+                onComment={handleStartComment}
+                hideOnMobile={commentsOpen}
+              />
+              <EditorHighlights intents={intents} comments={comments} />
+            </EditorProvider>
+          ) : null}
+        </div>
       </main>
 
       <CommentsPanel

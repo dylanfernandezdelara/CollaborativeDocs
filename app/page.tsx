@@ -117,10 +117,10 @@ export default function HomePage() {
     setCreating(true);
     try {
       const docId = await createDoc({
-        title: "Product Roadmap",
+        title: "Untitled",
         localOwnerId: localId,
       });
-      router.push(`/d/${docId}`);
+      router.push(`/d/${docId}?new=1`);
     } finally {
       setCreating(false);
     }
@@ -163,7 +163,9 @@ export default function HomePage() {
         {!listReady ? (
           <p className="mt-3 text-body text-ink-tertiary">Loading…</p>
         ) : docs.length === 0 ? (
-          <p className="mt-3 text-body text-ink-tertiary">No memos yet.</p>
+          <p className="mt-3 text-body text-ink-tertiary">
+            No memos yet. Start with a blank page below.
+          </p>
         ) : (
           <ul className="mt-1">
             {docs.map((doc) => {
@@ -185,7 +187,7 @@ export default function HomePage() {
                   >
                     <Link
                       href={`/d/${doc._id}`}
-                      className="grid grid-cols-[5.5rem_minmax(0,1fr)_auto] items-baseline gap-x-3 py-1.5 transition-opacity duration-200 ease-out hover:opacity-80"
+                      className="grid grid-cols-[5.5rem_minmax(0,1fr)_auto] items-baseline gap-x-3 py-2 transition-[opacity,background-color] duration-200 ease-out hover:opacity-80"
                     >
                       <span className="truncate text-caption text-ink-tertiary">
                         {when}
@@ -219,13 +221,18 @@ export default function HomePage() {
           </p>
         ) : null}
 
-        <div className="mt-4">
+        <div className="mt-4 flex min-h-7 items-center gap-4">
           <TextAction
             onClick={() => void handleCreate()}
             disabled={creating || !loaded || !localId}
           >
             {creating ? "Creating…" : "New memo"}
           </TextAction>
+          {!listReady ? null : docs.length === 0 && !creating ? (
+            <span className="text-caption text-ink-tertiary">
+              Opens a blank page
+            </span>
+          ) : null}
         </div>
       </section>
     </main>

@@ -23,6 +23,7 @@ import {
 } from "./lib/lastEdit";
 import { PURGE_PHASES, runPurgeStep } from "./lib/purgeDocument";
 import { guestDisplayName } from "../lib/displayName";
+import { normalizeMemoTitle } from "../lib/memoTitle";
 import type { Doc, Id } from "./_generated/dataModel";
 
 const CLAIM_BATCH_SIZE = 100;
@@ -215,13 +216,39 @@ export const create = mutation({
     }
 
     const docId = await ctx.db.insert("documents", {
-      title: args.title,
+      title: normalizeMemoTitle(args.title),
       createdAt: Date.now(),
       ownerId,
     });
 
     await prosemirrorSync.create(ctx, docId, EMPTY_DOC);
     return docId;
+  },
+});
+
+/**
+ * Update the memo title. Open-by-link like the body (same as `get` / sync) —
+ * anyone with the document URL can rename.
+ */
+export const updateTitle = mutation({
+  args: {
+    docId: v.id("documents"),
+    title: v.string(),
+  },
+  returns: v.null(),
+  handler: async (ctx, args) => {
+    const doc = await ctx.db.get("documents", args.docId);
+    if (!doc || doc.deletedAt !== undefined) {
+      throw new Error("Memo not found");
+    }
+
+    const title = normalizeMemoTitle(args.title);
+    if (title === doc.title) {
+      return null;
+    }
+
+    await ctx.db.patch("documents", args.docId, { title });
+    return null;
   },
 });
 
