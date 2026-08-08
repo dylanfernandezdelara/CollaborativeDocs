@@ -20,6 +20,7 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { editorExtensions } from "@/lib/editorExtensions";
 import { resolveDisplayName } from "@/lib/displayName";
+import { useGuestName } from "@/lib/guestName";
 import { displayMemoTitle } from "@/lib/memoTitle";
 import { localOwnerId, useOwnerKey } from "@/lib/ownerKey";
 import { LIVE_AGENT_MS, TOUCH_THROTTLE_MS } from "@/lib/presenceWindows";
@@ -42,15 +43,17 @@ import { createPortal } from "react-dom";
 /**
  * Throttled last-edit signal for the docs index (~5s while actively editing).
  * Ignores collab receives (`addToHistory: false`) so remote/agent sync does
- * not attribute last-edit to the focused local viewer. Display name is
- * derived server-side from auth / localOwnerId.
+ * not attribute last-edit to the focused local viewer. Guests pass their
+ * cookie-backed display name; auth profile names are still resolved server-side.
  */
 function DocumentTouch({
   docId,
   localOwnerId: localId,
+  displayName,
 }: {
   docId: Id<"documents">;
   localOwnerId?: string;
+  displayName: string;
 }) {
   const { editor } = useCurrentEditor();
   const touch = useMutation(api.documents.touch);
@@ -66,14 +69,18 @@ function DocumentTouch({
       const now = Date.now();
       if (now - lastTouchRef.current < TOUCH_THROTTLE_MS) return;
       lastTouchRef.current = now;
-      void touch({ docId, localOwnerId: localId });
+      void touch({
+        docId,
+        localOwnerId: localId,
+        displayName: displayName || undefined,
+      });
     };
 
     editor.on("update", onUpdate);
     return () => {
       editor.off("update", onUpdate);
     };
-  }, [docId, editor, localId, touch]);
+  }, [displayName, docId, editor, localId, touch]);
 
   return null;
 }
@@ -243,11 +250,13 @@ export default function DocPage({
   );
 
   const { ownerKey, loaded: ownerLoaded } = useOwnerKey();
+  const customGuestName = useGuestName();
   const localId = ownerKey ? localOwnerId(ownerKey) : undefined;
   const { isAuthenticated, isLoading: authLoading } = useConvexAuth();
   const user = useQuery(api.users.current, isAuthenticated ? {} : "skip");
   const displayName = resolveDisplayName({
     githubName: user?.name ?? null,
+    customGuestName,
     ownerKey,
   });
   const doc = useQuery(api.documents.get, { id: docId });
@@ -449,7 +458,11 @@ export default function DocPage({
               <EditorContent editor={null} />
               <FocusEditorOnMount enabled={focusBody} />
               {ownerLoaded && localId ? (
-                <DocumentTouch docId={docId} localOwnerId={localId} />
+                <DocumentTouch
+                  docId={docId}
+                  localOwnerId={localId}
+                  displayName={displayName}
+                />
               ) : null}
               <SelectionCommentButton
                 onComment={handleStartComment}

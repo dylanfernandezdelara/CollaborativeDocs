@@ -426,14 +426,16 @@ export const list = query({
 
 /**
  * Human last-edit signal for the docs index. Body editing stays open-by-link
- * (same as prosemirror sync / documents.get). Display name is derived server-
- * side (auth profile or guest label from `localOwnerId`) — never client-
- * supplied. Clients cannot claim `isAgent`.
+ * (same as prosemirror sync / documents.get). Authenticated editors use the
+ * auth profile name. Guests may pass a cookie-backed `displayName` (sanitized);
+ * otherwise the color-word label is derived from `localOwnerId`. Clients
+ * cannot claim `isAgent`.
  */
 export const touch = mutation({
   args: {
     docId: v.id("documents"),
     localOwnerId: v.optional(v.string()),
+    displayName: v.optional(v.string()),
   },
   returns: v.null(),
   handler: async (ctx, args) => {
@@ -453,7 +455,8 @@ export const touch = mutation({
         return null;
       }
       const ownerKey = args.localOwnerId.slice("local:".length);
-      name = normalizeEditorName(guestDisplayName(ownerKey));
+      const custom = normalizeEditorName(args.displayName ?? "");
+      name = custom || normalizeEditorName(guestDisplayName(ownerKey));
     }
     if (!name || name === "Guest") {
       return null;

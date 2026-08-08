@@ -51,12 +51,18 @@ export function firstName(fullName: string | null | undefined): string | null {
   return token || null;
 }
 
-/** Prefer GitHub profile name, else a stable color-word guest label from the cookie. */
+/**
+ * Prefer GitHub profile name, else a custom guest cookie name, else the
+ * stable color-word guest label from the owner cookie.
+ */
 export function resolveDisplayName(options: {
   githubName?: string | null;
+  customGuestName?: string | null;
   ownerKey: string | null;
 }): string {
   const github = options.githubName?.trim();
   if (github) return github;
+  const custom = options.customGuestName?.trim();
+  if (custom) return custom;
   return guestDisplayName(options.ownerKey);
 }
