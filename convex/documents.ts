@@ -9,7 +9,6 @@ import {
 import { internal } from "./_generated/api";
 import { v } from "convex/values";
 import { prosemirrorSync } from "./prosemirror";
-import { markdownToPmNodes } from "./lib/markdown";
 import {
   isClaimableLocalOwnerId,
   isLocalOwnerId,
@@ -39,22 +38,11 @@ const purgePhaseValidator = v.union(
   v.literal("finalize"),
 );
 
-const SEED_MARKDOWN = `# Product Roadmap
-
-This memo tracks our product milestones for the second half of 2026. Each milestone has an owner and a target date.
-
-## Milestone 1: Agent Collaboration MVP
-
-Ship a collaborative editor where AI agents and humans co-edit memos in real time, with tracked agent edits, intents, and comment threads.
-
-## Milestone 2: Enterprise Readiness
-
-Add permissions, audit trails, and compliance controls so teams can adopt agent-assisted editing in regulated environments.
-
-|Milestone|Owner|Status|Target|
-|---|---|---|---|
-|Milestone 1|Dylan|In progress|Aug 2026|
-|Milestone 2|Unassigned|Not started|Oct 2026|`;
+/** Empty TipTap/ProseMirror document for new memos. */
+const EMPTY_DOC = {
+  type: "doc",
+  content: [] as const,
+};
 
 /** Public shape — never expose ownerId (cookie UUID is the anonymous secret). */
 const documentPublicValidator = v.object({
@@ -232,12 +220,7 @@ export const create = mutation({
       ownerId,
     });
 
-    const seedContent = {
-      type: "doc",
-      content: markdownToPmNodes(SEED_MARKDOWN),
-    };
-
-    await prosemirrorSync.create(ctx, docId, seedContent);
+    await prosemirrorSync.create(ctx, docId, EMPTY_DOC);
     return docId;
   },
 });
