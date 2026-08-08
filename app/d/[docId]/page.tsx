@@ -20,9 +20,11 @@ import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
 import { editorExtensions } from "@/lib/editorExtensions";
 import { resolveDisplayName } from "@/lib/displayName";
+import { displayMemoTitle } from "@/lib/memoTitle";
 import { localOwnerId, useOwnerKey } from "@/lib/ownerKey";
 import { LIVE_AGENT_MS, TOUCH_THROTTLE_MS } from "@/lib/presenceWindows";
 import { useAcceptCollaboratorInvite } from "@/lib/useAcceptCollaboratorInvite";
+import { useMemoFocus } from "@/lib/useMemoFocus";
 import { useTiptapSync } from "@convex-dev/prosemirror-sync/tiptap";
 import usePresence from "@convex-dev/presence/react";
 import {
@@ -34,7 +36,6 @@ import type { Editor } from "@tiptap/core";
 import type { Transaction } from "@tiptap/pm/state";
 import { useConvexAuth, useMutation, useQuery } from "convex/react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
 import { use, useEffect, useMemo, useRef, useState } from "react";
 import { createPortal } from "react-dom";
 
@@ -236,7 +237,10 @@ export default function DocPage({
     (Array.isArray(resolvedSearch.new)
       ? resolvedSearch.new[0]
       : resolvedSearch.new) === "1";
-  const router = useRouter();
+  const { titleAutoFocus, focusBody, onTitleEnter } = useMemoFocus(
+    docId,
+    isNewMemo,
+  );
 
   const { ownerKey, loaded: ownerLoaded } = useOwnerKey();
   const localId = ownerKey ? localOwnerId(ownerKey) : undefined;
@@ -275,8 +279,6 @@ export default function DocPage({
   const [commentsOpen, setCommentsOpen] = useState(false);
   const [historyOpen, setHistoryOpen] = useState(false);
   const [composeAnchor, setComposeAnchor] = useState<string | null>(null);
-  const [focusTitle, setFocusTitle] = useState(isNewMemo);
-  const [focusBody, setFocusBody] = useState(false);
   const editorRef = useRef<Editor | null>(null);
   const highlightExtension = useMemo(
     () => createHighlightExtension(getHighlights),
@@ -293,19 +295,9 @@ export default function DocPage({
     return () => clearInterval(id);
   }, []);
 
-  // Drop `?new=1` after first paint so refresh doesn't re-select the title.
-  useEffect(() => {
-    if (!isNewMemo) return;
-    router.replace(`/d/${docId}`, { scroll: false });
-  }, [docId, isNewMemo, router]);
-
   useEffect(() => {
     if (!doc) return;
-    const label =
-      typeof doc.title === "string" && doc.title.trim()
-        ? doc.title.trim()
-        : "Untitled";
-    document.title = `${label} · Memos`;
+    document.title = `${displayMemoTitle(doc.title)} · Memos`;
     return () => {
       document.title = "Memos";
     };
@@ -322,11 +314,6 @@ export default function DocPage({
   function handleStartComment(anchorText: string) {
     setComposeAnchor(anchorText);
     setCommentsOpen(true);
-  }
-
-  function handleTitleEnter() {
-    setFocusTitle(false);
-    setFocusBody(true);
   }
 
   const overflowActions: Array<{
@@ -365,7 +352,7 @@ export default function DocPage({
     <div
       className={`min-h-screen ${commentsOpen ? "md:pr-[320px]" : ""}`}
     >
-      <header className="pointer-events-none sticky top-4 z-30 flex items-start justify-between px-8 sm:top-6">
+      <header className="pointer-events-none sticky top-0 z-30 flex items-start justify-between bg-gradient-to-b from-page from-65% to-transparent px-8 pt-4 pb-8 sm:pt-6 sm:pb-10">
         <TextAction
           href="/"
           variant="secondary"
@@ -430,41 +417,44 @@ export default function DocPage({
         </div>
       </header>
 
-      <main className="mx-auto max-w-[640px] px-8 pt-10 pb-20 sm:pt-16 sm:pb-24">
-        <MemoTitle
-          docId={docId}
-          title={doc.title}
-          autoFocus={focusTitle}
-          onEnter={handleTitleEnter}
-        />
-        {sync.isLoading ? (
-          <p className="text-body text-ink-tertiary">Loading…</p>
-        ) : sync.initialContent !== null ? (
-          <EditorProvider
-            extensions={extensions}
-            content={sync.initialContent}
-            onCreate={({ editor }) => {
-              editorRef.current = editor;
-            }}
-            onDestroy={() => {
-              editorRef.current = null;
-            }}
-            editorContainerProps={{
-              className: "prose-editor",
-            }}
-          >
-            <EditorContent editor={null} />
-            <FocusEditorOnMount enabled={focusBody} />
-            {ownerLoaded && localId ? (
-              <DocumentTouch docId={docId} localOwnerId={localId} />
-            ) : null}
-            <SelectionCommentButton
-              onComment={handleStartComment}
-              hideOnMobile={commentsOpen}
-            />
-            <EditorHighlights intents={intents} comments={comments} />
-          </EditorProvider>
-        ) : null}
+      <main className="mx-auto max-w-[640px] px-8 pt-14 pb-24 sm:pt-20 sm:pb-28">
+        <div className="animate-in fade-in duration-300 ease-out fill-mode-both">
+          <MemoTitle
+            docId={docId}
+            title={doc.title}
+            autoFocus={titleAutoFocus}
+            onEnter={onTitleEnter}
+          />
+          {sync.isLoading ? (
+            <p className="text-body text-ink-tertiary">Loading…</p>
+          ) : sync.initialContent !== null ? (
+            <EditorProvider
+              extensions={extensions}
+              content={sync.initialContent}
+              autofocus={false}
+              onCreate={({ editor }) => {
+                editorRef.current = editor;
+              }}
+              onDestroy={() => {
+                editorRef.current = null;
+              }}
+              editorContainerProps={{
+                className: "prose-editor",
+              }}
+            >
+              <EditorContent editor={null} />
+              <FocusEditorOnMount enabled={focusBody} />
+              {ownerLoaded && localId ? (
+                <DocumentTouch docId={docId} localOwnerId={localId} />
+              ) : null}
+              <SelectionCommentButton
+                onComment={handleStartComment}
+                hideOnMobile={commentsOpen}
+              />
+              <EditorHighlights intents={intents} comments={comments} />
+            </EditorProvider>
+          ) : null}
+        </div>
       </main>
 
       <CommentsPanel

@@ -42,6 +42,8 @@ export const editorExtensions = [
   Placeholder.configure({
     placeholder: "Start writing…",
     emptyEditorClass: "is-editor-empty",
+    showOnlyWhenEditable: true,
+    showOnlyCurrent: true,
   }),
   Table.configure({ resizable: false }),
   TableRow,

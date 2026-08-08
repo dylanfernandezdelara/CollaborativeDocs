@@ -23,6 +23,7 @@ import {
 } from "./lib/lastEdit";
 import { PURGE_PHASES, runPurgeStep } from "./lib/purgeDocument";
 import { guestDisplayName } from "../lib/displayName";
+import { normalizeMemoTitle } from "../lib/memoTitle";
 import type { Doc, Id } from "./_generated/dataModel";
 
 const CLAIM_BATCH_SIZE = 100;
@@ -200,15 +201,6 @@ async function continueIdentityClaim(
     });
   }
   return result;
-}
-
-const MAX_TITLE_LENGTH = 200;
-
-/** Normalize a memo title for storage; empty → `"Untitled"`. */
-export function normalizeMemoTitle(raw: string): string {
-  const trimmed = raw.replace(/\s+/g, " ").trim();
-  if (!trimmed) return "Untitled";
-  return trimmed.slice(0, MAX_TITLE_LENGTH);
 }
 
 export const create = mutation({

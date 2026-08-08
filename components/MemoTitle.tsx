@@ -2,6 +2,11 @@
 
 import { api } from "@/convex/_generated/api";
 import type { Id } from "@/convex/_generated/dataModel";
+import {
+  MAX_MEMO_TITLE_LENGTH,
+  normalizeMemoTitle,
+} from "@/lib/memoTitle";
+import { cn } from "@/lib/utils";
 import { useMutation } from "convex/react";
 import {
   useEffect,
@@ -12,7 +17,6 @@ import {
 } from "react";
 
 const TITLE_SAVE_MS = 400;
-const MAX_TITLE_LENGTH = 200;
 
 type MemoTitleProps = {
   docId: Id<"documents">;
@@ -22,10 +26,6 @@ type MemoTitleProps = {
   onEnter?: () => void;
 };
 
-function coerceDraft(value: unknown): string {
-  return typeof value === "string" ? value : "";
-}
-
 export function MemoTitle({
   docId,
   title,
@@ -33,17 +33,17 @@ export function MemoTitle({
   onEnter,
 }: MemoTitleProps) {
   const updateTitle = useMutation(api.documents.updateTitle);
-  const [draft, setDraft] = useState(() => coerceDraft(title));
+  const [draft, setDraft] = useState(title);
+  const [focused, setFocused] = useState(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
   const saveTimerRef = useRef<number | null>(null);
-  const latestDraftRef = useRef(coerceDraft(title));
+  const latestDraftRef = useRef(title);
+  const mountedRef = useRef(true);
 
-  // Keep draft in sync when remote title changes and we aren't mid-edit.
   useEffect(() => {
     if (document.activeElement === inputRef.current) return;
-    const next = coerceDraft(title);
-    setDraft(next);
-    latestDraftRef.current = next;
+    setDraft(title);
+    latestDraftRef.current = title;
   }, [title]);
 
   useEffect(() => {
@@ -54,30 +54,51 @@ export function MemoTitle({
     input.select();
   }, [autoFocus]);
 
+  const flushSave = useEffectEvent(async (value: string) => {
+    const normalized = normalizeMemoTitle(value);
+    try {
+      await updateTitle({ docId, title: normalized });
+      if (!mountedRef.current) return;
+      if (document.activeElement !== inputRef.current) {
+        setDraft(normalized);
+        latestDraftRef.current = normalized;
+      }
+    } catch (error) {
+      console.error("Failed to save memo title", error);
+      if (!mountedRef.current) return;
+      setDraft(title);
+      latestDraftRef.current = title;
+    }
+  });
+
+  function cancelScheduledSave() {
+    if (saveTimerRef.current === null) return;
+    window.clearTimeout(saveTimerRef.current);
+    saveTimerRef.current = null;
+  }
+
+  function flushNow(value: string = latestDraftRef.current) {
+    cancelScheduledSave();
+    const normalized = normalizeMemoTitle(value);
+    setDraft(normalized);
+    latestDraftRef.current = normalized;
+    void flushSave(normalized);
+  }
+
   useEffect(() => {
+    mountedRef.current = true;
     return () => {
+      mountedRef.current = false;
       if (saveTimerRef.current !== null) {
-        window.clearTimeout(saveTimerRef.current);
+        cancelScheduledSave();
+        void flushSave(latestDraftRef.current);
       }
     };
   }, []);
 
-  const flushSave = useEffectEvent(async (value: string) => {
-    try {
-      await updateTitle({ docId, title: coerceDraft(value) });
-    } catch (error) {
-      console.error("Failed to save memo title", error);
-      const fallback = coerceDraft(title);
-      setDraft(fallback);
-      latestDraftRef.current = fallback;
-    }
-  });
-
   function scheduleSave(value: string) {
     latestDraftRef.current = value;
-    if (saveTimerRef.current !== null) {
-      window.clearTimeout(saveTimerRef.current);
-    }
+    cancelScheduledSave();
     saveTimerRef.current = window.setTimeout(() => {
       saveTimerRef.current = null;
       void flushSave(latestDraftRef.current);
@@ -85,28 +106,38 @@ export function MemoTitle({
   }
 
   function handleChange(value: string) {
-    const next = coerceDraft(value).slice(0, MAX_TITLE_LENGTH);
+    const next = value.slice(0, MAX_MEMO_TITLE_LENGTH);
     setDraft(next);
     scheduleSave(next);
   }
 
-  function handleBlur() {
-    if (saveTimerRef.current !== null) {
-      window.clearTimeout(saveTimerRef.current);
-      saveTimerRef.current = null;
+  function handleFocus() {
+    setFocused(true);
+    const input = inputRef.current;
+    if (!input) return;
+    if (normalizeMemoTitle(input.value) === "Untitled" && input.value.trim() !== "") {
+      requestAnimationFrame(() => input.select());
     }
-    void flushSave(latestDraftRef.current);
+  }
+
+  function handleBlur() {
+    setFocused(false);
+    flushNow();
   }
 
   function handleKeyDown(event: KeyboardEvent<HTMLInputElement>) {
     if (event.key === "Enter") {
       event.preventDefault();
-      if (saveTimerRef.current !== null) {
-        window.clearTimeout(saveTimerRef.current);
-        saveTimerRef.current = null;
-      }
-      void flushSave(latestDraftRef.current);
+      flushNow();
       onEnter?.();
+      return;
+    }
+    if (event.key === "Escape") {
+      event.preventDefault();
+      cancelScheduledSave();
+      setDraft(title);
+      latestDraftRef.current = title;
+      inputRef.current?.blur();
     }
   }
 
@@ -116,12 +147,18 @@ export function MemoTitle({
       type="text"
       value={draft}
       onChange={(event) => handleChange(event.target.value)}
+      onFocus={handleFocus}
       onBlur={handleBlur}
       onKeyDown={handleKeyDown}
       aria-label="Memo title"
       placeholder="Untitled"
-      maxLength={MAX_TITLE_LENGTH}
-      className="mb-3 w-full border-0 bg-transparent p-0 text-title font-medium tracking-[-0.15px] text-ink outline-none placeholder:text-ink-tertiary"
+      maxLength={MAX_MEMO_TITLE_LENGTH}
+      className={cn(
+        "mb-6 w-full scroll-mt-16 border-0 border-b bg-transparent p-0 pb-2 text-title font-medium tracking-[-0.15px] text-ink caret-ink outline-none transition-[border-color] duration-200 ease-out placeholder:text-ink-tertiary sm:scroll-mt-20",
+        focused
+          ? "border-primary"
+          : "border-transparent hover:border-border",
+      )}
     />
   );
 }
