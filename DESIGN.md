@@ -66,13 +66,14 @@ underline only. Never colored phrases, never colored icons, never row fills.
 ## Memos index — "Quiet Index · dated"
 
 - Centered column (~640px prose width).
-- Header wordmark-as-h1: "Memos" (`text-heading`/500), auth actions right-aligned.
+- Header wordmark-as-h1: "Memos" (`text-heading`/500) alone.
   Below it, a **1.5px ink rule** carrying only the right-aligned memo count in
   tertiary.
 - Rows: date in a fixed 5.5rem (88px) tertiary column · title (`text-body`; medium when live)
   · owner's name right-aligned in tertiary.
 - Footer actions as text: primary ("New memo") underlined 1.5px in olive;
   secondary ("Shared with me") underlined 1px in tertiary gray.
+  Auth actions sit bottom-right of the index column (`mt-auto`, right-aligned).
 
 ## Authorship & presence
 

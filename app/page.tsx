@@ -146,9 +146,8 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-[640px] flex-col px-8 pt-[18vh] pb-8 sm:pt-[20vh] sm:pb-12">
-      <header className="flex min-h-8 items-center justify-between gap-4">
+      <header className="flex min-h-8 items-center">
         <h1 className="text-heading font-medium text-ink">Memos</h1>
-        <AuthNav />
       </header>
 
       <section className="mt-10 sm:mt-12">
@@ -235,6 +234,10 @@ export default function HomePage() {
           ) : null}
         </div>
       </section>
+
+      <div className="mt-auto flex justify-end pt-10">
+        <AuthNav />
+      </div>
     </main>
   );
 }
