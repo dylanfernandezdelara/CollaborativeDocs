@@ -220,24 +220,23 @@ export default function HomePage() {
           </p>
         ) : null}
 
-        <div className="mt-4 flex min-h-7 items-center gap-4">
-          <TextAction
-            onClick={() => void handleCreate()}
-            disabled={creating || !loaded || !localId}
-          >
-            {creating ? "Creating…" : "New memo"}
-          </TextAction>
-          {!listReady ? null : docs.length === 0 && !creating ? (
-            <span className="text-caption text-ink-tertiary">
-              Opens a blank page
-            </span>
-          ) : null}
+        <div className="mt-4 flex min-h-7 items-center justify-between gap-4">
+          <div className="flex min-w-0 items-center gap-4">
+            <TextAction
+              onClick={() => void handleCreate()}
+              disabled={creating || !loaded || !localId}
+            >
+              {creating ? "Creating…" : "New memo"}
+            </TextAction>
+            {!listReady ? null : docs.length === 0 && !creating ? (
+              <span className="text-caption text-ink-tertiary">
+                Opens a blank page
+              </span>
+            ) : null}
+          </div>
+          <AuthNav />
         </div>
       </section>
-
-      <div className="mt-auto flex justify-end pt-10">
-        <AuthNav />
-      </div>
     </main>
   );
 }

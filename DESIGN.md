@@ -71,9 +71,9 @@ underline only. Never colored phrases, never colored icons, never row fills.
   tertiary.
 - Rows: date in a fixed 5.5rem (88px) tertiary column · title (`text-body`; medium when live)
   · owner's name right-aligned in tertiary.
-- Footer actions as text: primary ("New memo") underlined 1.5px in olive;
-  secondary ("Shared with me") underlined 1px in tertiary gray.
-  Auth actions sit bottom-right of the index column (`mt-auto`, right-aligned).
+- Footer actions as text: primary ("New memo") underlined 1.5px in olive on
+  the left; auth actions (guest name + Sign in / Sign out) right-aligned on
+  the same row. Secondary ("Shared with me") underlined 1px in tertiary gray.
 
 ## Authorship & presence
 
