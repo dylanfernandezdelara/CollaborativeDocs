@@ -146,8 +146,9 @@ export default function HomePage() {
 
   return (
     <main className="mx-auto flex min-h-screen max-w-[640px] flex-col px-8 pt-[18vh] pb-8 sm:pt-[20vh] sm:pb-12">
-      <header className="flex min-h-8 items-center">
+      <header className="flex min-h-8 items-center justify-between gap-4">
         <h1 className="text-heading font-medium text-ink">Memos</h1>
+        <AuthNav />
       </header>
 
       <section className="mt-10 sm:mt-12">
@@ -220,21 +221,18 @@ export default function HomePage() {
           </p>
         ) : null}
 
-        <div className="mt-4 flex min-h-7 items-center justify-between gap-4">
-          <div className="flex min-w-0 items-center gap-4">
-            <TextAction
-              onClick={() => void handleCreate()}
-              disabled={creating || !loaded || !localId}
-            >
-              {creating ? "Creating…" : "New memo"}
-            </TextAction>
-            {!listReady ? null : docs.length === 0 && !creating ? (
-              <span className="text-caption text-ink-tertiary">
-                Opens a blank page
-              </span>
-            ) : null}
-          </div>
-          <AuthNav />
+        <div className="mt-4 flex min-h-7 items-center gap-4">
+          <TextAction
+            onClick={() => void handleCreate()}
+            disabled={creating || !loaded || !localId}
+          >
+            {creating ? "Creating…" : "New memo"}
+          </TextAction>
+          {!listReady ? null : docs.length === 0 && !creating ? (
+            <span className="text-caption text-ink-tertiary">
+              Opens a blank page
+            </span>
+          ) : null}
         </div>
       </section>
     </main>
