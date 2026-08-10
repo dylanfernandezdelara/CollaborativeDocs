@@ -1,7 +1,6 @@
 "use client";
 
 import { DotsSpinner } from "@/components/DotsSpinner";
-import { GuestNameControl } from "@/components/GuestNameControl";
 import { TextAction } from "@/components/TextAction";
 import { api } from "@/convex/_generated/api";
 import { firstName } from "@/lib/displayName";
@@ -27,12 +26,9 @@ export function AuthNav() {
 
   if (!isAuthenticated) {
     return (
-      <div className="flex min-w-0 items-center gap-3">
-        <GuestNameControl />
-        <TextAction href="/sign-in" variant="secondary">
-          Sign in
-        </TextAction>
-      </div>
+      <TextAction href="/sign-in" variant="secondary">
+        Sign in
+      </TextAction>
     );
   }
 
